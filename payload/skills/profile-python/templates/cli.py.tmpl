@@ -1,0 +1,24 @@
+"""Command-line interface for {{NAME}}."""
+
+from __future__ import annotations
+
+import argparse
+import sys
+
+
+def build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(prog="{{NAME}}", description="{{PURPOSE}}")
+    parser.add_argument("-v", "--verbose", action="store_true", help="verbose output")
+    return parser
+
+
+def main(argv: list[str] | None = None) -> int:
+    args = build_parser().parse_args(argv)
+    if args.verbose:
+        print("{{NAME}}: verbose mode on", file=sys.stderr)
+    print("Hello from {{NAME}}.")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
