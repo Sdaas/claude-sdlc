@@ -1,0 +1,34 @@
+#!/usr/bin/env bats
+#
+# Tests for {{NAME}}. Run via ./test.sh (which checks bats is installed).
+# The tool must work under BOTH bash and zsh, so we exercise it under each.
+
+@test "{{NAME}} --help prints usage and exits 0" {
+	run ./bin/{{NAME}} --help
+	[ "$status" -eq 0 ]
+	[[ "$output" == *"Usage"* ]]
+}
+
+@test "{{NAME}} runs a basic invocation" {
+	run ./bin/{{NAME}}
+	[ "$status" -eq 0 ]
+	[[ "$output" == *"{{NAME}}"* ]]
+}
+
+@test "{{NAME}} rejects an unknown flag" {
+	run ./bin/{{NAME}} --nope
+	[ "$status" -ne 0 ]
+}
+
+@test "{{NAME}} runs under bash" {
+	run bash ./bin/{{NAME}} --help
+	[ "$status" -eq 0 ]
+}
+
+@test "{{NAME}} runs under zsh" {
+	if ! command -v zsh >/dev/null 2>&1; then
+		skip "zsh not installed"
+	fi
+	run zsh ./bin/{{NAME}} --help
+	[ "$status" -eq 0 ]
+}

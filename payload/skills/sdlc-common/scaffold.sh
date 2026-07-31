@@ -66,6 +66,16 @@ if [[ -z "$AUTHOR" ]]; then
 fi
 YEAR="$(date +%Y)"
 
+# CamelCase class name for the brew formula (e.g. my-tool -> MyTool).
+CLASS=""
+_saved_ifs="$IFS"
+IFS='-_ '
+for _part in $NAME; do
+	_first="$(printf '%s' "${_part:0:1}" | tr '[:lower:]' '[:upper:]')"
+	CLASS="$CLASS$_first${_part:1}"
+done
+IFS="$_saved_ifs"
+
 # --- non-empty guard --------------------------------------------------------
 if [[ -d "$TARGET" ]] && [[ -n "$(ls -A "$TARGET" 2>/dev/null || true)" ]]; then
 	$FORCE || die "target not empty: $TARGET (use --force)"
@@ -83,8 +93,26 @@ render() {
 	content="${content//\{\{DISTRIBUTION\}\}/$DISTRIBUTION}"
 	content="${content//\{\{AUTHOR\}\}/$AUTHOR}"
 	content="${content//\{\{YEAR\}\}/$YEAR}"
+	content="${content//\{\{CLASS\}\}/$CLASS}"
 	mkdir -p "$(dirname "$dst")"
 	printf '%s\n' "$content" >"$dst"
+}
+
+# Render the shell-profile files (test.sh via bats, tool, release, CI, formula).
+render_shell_profile() {
+	local st
+	st="$(dirname "$SCRIPT_DIR")/profile-shell/templates"
+	[[ -d "$st" ]] || die "no profile-shell templates at: $st"
+	render "$st/bin-tool.tmpl" "$TARGET/bin/$NAME"
+	render "$st/tool.bats.tmpl" "$TARGET/tests/$NAME.bats"
+	render "$st/test.sh.tmpl" "$TARGET/test.sh"
+	render "$st/release.sh.tmpl" "$TARGET/release.sh"
+	# Shell CI installs bats/zsh — overrides the generic core CI.
+	render "$st/ci.yml.tmpl" "$TARGET/.github/workflows/ci.yml"
+	chmod +x "$TARGET/bin/$NAME" "$TARGET/test.sh" "$TARGET/release.sh"
+	if [[ "$DISTRIBUTION" == "brew" ]]; then
+		render "$st/formula.rb.tmpl" "$TARGET/Formula/$NAME.rb"
+	fi
 }
 
 # --- core skeleton ----------------------------------------------------------
@@ -116,5 +144,14 @@ esac
 
 # --- executable bits --------------------------------------------------------
 chmod +x "$TARGET/hooks/pre-push" "$TARGET/install-hooks.sh"
+
+# --- stack profile ----------------------------------------------------------
+case "$PROFILE" in
+shell) render_shell_profile ;;
+python | sql | frontend)
+	echo "note: profile '$PROFILE' not yet implemented — core skeleton only"
+	;;
+*) die "unknown profile: $PROFILE" ;;
+esac
 
 echo "Scaffolded $NAME ($PROFILE/$ARCHETYPE) into $TARGET"
