@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+#
+# {{NAME}} — {{PURPOSE}}
+#
+# Written to run under both bash and zsh: avoids bash-only features
+# (no arrays, no ${BASH_SOURCE}). Keep it that way.
+
+set -eu
+
+VERBOSE=0
+
+usage() {
+	cat <<EOF
+Usage: {{NAME}} [--help] [--verbose]
+
+{{PURPOSE}}
+EOF
+}
+
+main() {
+	while [ $# -gt 0 ]; do
+		case "$1" in
+		-h | --help)
+			usage
+			return 0
+			;;
+		-v | --verbose)
+			VERBOSE=1
+			;;
+		*)
+			echo "{{NAME}}: unknown argument: $1" >&2
+			usage >&2
+			return 2
+			;;
+		esac
+		shift
+	done
+
+	if [ "$VERBOSE" -eq 1 ]; then
+		echo "{{NAME}}: verbose mode on" >&2
+	fi
+
+	echo "Hello from {{NAME}}."
+}
+
+main "$@"

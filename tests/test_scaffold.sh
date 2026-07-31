@@ -98,11 +98,69 @@ test_nonempty_guard() {
 	rm -rf "$(dirname "$tgt")"
 }
 
+# --- Test 4: shell profile files generated -----------------------------------
+test_shell_profile_files() {
+	start "shell profile generates bin/<tool>, bats suite, test.sh, release.sh"
+	local tgt; tgt="$(mktemp -d)/proj"
+	scaffold_sample "$tgt" >/dev/null 2>&1
+	assert_exec "$tgt/bin/widgetron" "bin/widgetron is executable"
+	assert_exists "$tgt/tests/widgetron.bats" "bats suite exists (named after tool)"
+	assert_exec "$tgt/test.sh" "test.sh is executable"
+	assert_exec "$tgt/release.sh" "release.sh is executable"
+	assert_contains "$tgt/bin/widgetron" "Usage" "tool prints usage"
+	assert_absent_str "$tgt/bin/widgetron" "{{" "no leftover placeholders in tool"
+	assert_absent_str "$tgt/test.sh" "{{" "no leftover placeholders in test.sh"
+	rm -rf "$(dirname "$tgt")"
+}
+
+# --- Test 5: test.sh guards on missing bats (dev dependency) ------------------
+test_bats_dependency_guard() {
+	start "generated test.sh checks bats is installed"
+	local tgt; tgt="$(mktemp -d)/proj"
+	scaffold_sample "$tgt" >/dev/null 2>&1
+	assert_contains "$tgt/test.sh" "command -v bats" "test.sh checks for bats"
+	assert_contains "$tgt/test.sh" "bats-core" "test.sh points at install instructions"
+	rm -rf "$(dirname "$tgt")"
+}
+
+# --- Test 6: brew formula only when distribution=brew ------------------------
+test_formula_conditional() {
+	start "Formula generated only when distribution=brew"
+	local tgt; tgt="$(mktemp -d)/proj"
+	scaffold_sample "$tgt" >/dev/null 2>&1
+	assert_exists "$tgt/Formula/widgetron.rb" "brew: Formula present"
+	local tgt2; tgt2="$(mktemp -d)/proj"
+	scaffold_sample "$tgt2" --distribution none >/dev/null 2>&1
+	assert_absent_str "$tgt2/Formula/widgetron.rb" "class" "none: Formula absent"
+	rm -rf "$(dirname "$tgt")" "$(dirname "$tgt2")"
+}
+
+# --- Test 7: generated shell scripts pass shellcheck ------------------------
+test_generated_shellcheck() {
+	start "generated shell scripts are shellcheck-clean"
+	if ! command -v shellcheck >/dev/null 2>&1; then
+		pass "shellcheck not installed — skipped"
+		return
+	fi
+	local tgt; tgt="$(mktemp -d)/proj"
+	scaffold_sample "$tgt" >/dev/null 2>&1
+	if shellcheck "$tgt/bin/widgetron" "$tgt/test.sh" "$tgt/release.sh" "$tgt/hooks/pre-push" "$tgt/install-hooks.sh" >/dev/null 2>&1; then
+		pass "generated scripts pass shellcheck"
+	else
+		fail "generated scripts have shellcheck findings"
+	fi
+	rm -rf "$(dirname "$tgt")"
+}
+
 echo "Running scaffold tests against: $SCAFFOLD"
 echo
 test_core_files
 test_substitutions
 test_nonempty_guard
+test_shell_profile_files
+test_bats_dependency_guard
+test_formula_conditional
+test_generated_shellcheck
 echo
 printf 'Results: %d passed, %d failed\n' "$PASS" "$FAIL"
 [[ "$FAIL" -eq 0 ]]
