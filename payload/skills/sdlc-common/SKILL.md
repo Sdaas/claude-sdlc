@@ -1,0 +1,93 @@
+---
+name: sdlc-common
+description: >
+  Shared vocabulary and rules for the agentic SDLC. Load this whenever running a
+  workflow command (/feature, /bugfix, /harden, /newproject) or when deciding
+  how much process a change needs. Defines tiers, the code vs prose paths, the
+  governance matrix, and the non-negotiable conventions (branching, backlog,
+  review-before-commit). The command that loaded this skill walks the actual
+  gate sequence; this skill defines what each term means.
+---
+
+# SDLC — Common Conventions
+
+This skill is the shared "rulebook" the workflow commands rely on. It does not
+run a workflow itself — it defines the vocabulary and the hard rules so every
+command behaves consistently.
+
+## 1. Classify every change
+
+Before any work, state the change in one plain sentence, then decide three
+things and **confirm them with the human**:
+
+1. **Tier** — how much process (see §2).
+2. **Path** — code or prose (see §3).
+3. **Issue + branch** — the backlog item and where the work happens (see §5).
+
+Never start implementing before the human confirms the classification.
+
+## 2. Tiers (effort scales to the task)
+
+| Tier | Use when | Branch | Gates |
+|---|---|---|---|
+| **Quick** | Trivial: no logic/interface change, no new tests (typo, comment, doc tweak). If in doubt, it is NOT quick. | `main` | surgical change → **human review** → commit |
+| **Standard** | Most features and bug fixes. | `feature/<slug>` or `fix/<slug>` | interview → design(brief) → implement → code-review → review-guide → **human review** → commit → pre-push |
+| **Full** | Shipped/packaged, security-sensitive, or high-risk. | branch | Standard + design-review + security-review + retrospective |
+
+Propose a tier; the human confirms or overrides.
+
+## 3. Paths (how "implement" happens)
+
+- **CODE path** — behavior/logic. **Test-first**: write a failing test → confirm
+  red → implement → green → refactor. Where valuable, write the test as an
+  isolated subagent that sees the requirements but NOT the implementation plan,
+  so tests encode intent, not the code. All tests run via the repo's `test.sh`.
+- **PROSE path** — markdown skills, docs, design, templates. No red-green.
+  Instead: draft → **self-check against the prose checklist** (§4) → human
+  review. Still gated by review-guide and review-before-commit.
+
+Pick the path at classify. A change can be mixed (e.g. a code feature that also
+edits docs) — run each file down its appropriate path.
+
+## 4. Prose checklist (self-check before human review)
+
+- Does it say one thing clearly, at the right altitude (no rambling)?
+- Is it consistent with the design docs and the other skills/commands?
+- Are cross-references (`#issue`, file paths, skill names) correct?
+- Would a new reader act correctly from this alone? No leftover placeholders?
+- Curated, not exhaustive — key points only (esp. `design/overview.md`).
+
+## 5. Hard conventions (non-negotiable)
+
+- **Backlog = GitHub Issues.** Every change links to an issue; the issue number
+  is the slug. Create one if it does not exist. Respect `Depends on: #N`.
+- **Branching.** Trivial → `main`. Everything else → its own branch.
+- **Review before commit (rule #10).** Never commit or push before the human has
+  reviewed and approved. Present the review guide + changes, wait, then commit.
+- **Review guide.** Before handing off, list the changed files, a recommended
+  review order, and one line each on why the file matters / where the key change
+  is. The human never guesses where the substance is.
+- **Tests green before push and merge.** The pre-push hook and CI run `test.sh`.
+- **All testing/release via scripts.** Use the repo's `test.sh` / `release.sh`;
+  do not invent ad-hoc commands.
+- **Design stays current.** Record only KEY decisions in `design/overview.md`.
+
+## 6. Governance matrix (who acts, who approves)
+
+| Gate | Agent | Human |
+|---|---|---|
+| Classify (tier/path/issue) | proposes | approves |
+| Interview | asks | answers |
+| Design | drafts | approves |
+| Implement (code/prose) | acts | spot-checks |
+| Code / security review | performs | reviews findings |
+| Review guide | produces map | reviews the code |
+| Human review | waits | **approves before any commit** |
+| Commit / merge | commits after approval | approves merge (needs green CI) |
+| Retrospective | drafts | confirms lessons |
+
+## 7. Stack detection
+
+Read the repo's `CLAUDE.md` marker (archetype / profile / distribution) to know
+the stack without re-asking. Use it to pick the right stack profile
+(`profile-shell`, etc.) for scaffolding, tests, and the review checklist.
