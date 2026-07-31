@@ -39,7 +39,7 @@ die() {
 }
 
 log() { # only prints when --verbose
-	$VERBOSE && printf '  %s\n' "$1" || true
+	if $VERBOSE; then printf '  %s\n' "$1"; fi
 }
 
 usage() {
