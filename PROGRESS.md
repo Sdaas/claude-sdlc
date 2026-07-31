@@ -9,13 +9,17 @@ holds the roadmap + dependency order; `docs/design/` holds the architecture.
 
 ## ▶ Current status
 
-- **Phase:** 2 (`/feature` + first self-hosted feature) — starting
-- **Applied:** SDLC v0.1.0 is installed in `~/.claude` (`/newproject` live).
-- **Self-hosting:** build the SDLC *with itself*, **this repo only**, until it
-  graduates (criteria in memory `sdlc-self-hosting`). `/feature` stays hand-built.
-- **NEXT ACTION:** build **#2 `sdlc-common/SKILL.md`** (tiers, paths, governance,
-  conventions) → then **#12 `/feature` command** → then **#13 python profile**
-  (the first feature built *by* `/feature`).
+- **Phase:** 2 (`/feature` + first self-hosted feature) — **nearly done**
+- **Self-hosting is LIVE.** Applied to `~/.claude`; `/feature` + `/newproject` are
+  live commands. **#13 python profile was built *by* `/feature`** end-to-end
+  (graduation criterion #4 met once). Closed #2, #12, #13.
+- **Phase 2 remaining:** #8 (README Setup + deps script — the only Phase-2 item
+  with no dependency).
+- **NEXT ACTION:** #8, then Phase 3 (all blocked on #12, now closed): #14 /bugfix,
+  #15 deploy(brew), #16 profile-sql, #17 profile-frontend, #18 /retrospective,
+  #19 /resume.
+- **Graduation:** need ~3–4 clean `/feature` runs + no process gaps in retros
+  before using the SDLC on OTHER repos (see memory `sdlc-self-hosting`).
 - **Process reminder:** never commit/push before human review + approval (rule #10).
 
 ## How to pick the next work
@@ -28,6 +32,15 @@ listed order. Update this file's NEXT ACTION to the active issue #.
 ## Session log
 
 Newest first. One short entry per working session.
+
+### 2026-07-31 — Session 1 (cont. 4)
+- Built #2 sdlc-common SKILL.md + #12 /feature command (hand-built), merged (PR #23).
+- Applied to `~/.claude` → **/feature is live**. Then **used /feature to build
+  #13 python profile** end-to-end (interview → design → TDD → verify), merged
+  (PR #26). Suite 82 assertions. First self-hosted feature — no manual rescue.
+- Retro note: Standard-tier Gate 3 (design) was near-empty when the interview
+  fully determined the design — candidate process tweak.
+- Next: #8, then Phase 3.
 
 ### 2026-07-31 — Session 1 (cont. 3)
 - Applied SDLC to real `~/.claude` (v0.1.0); smoke-tested the installed scaffolder.
