@@ -1,91 +1,66 @@
-# Build Plan — Agentic SDLC
+# Roadmap
 
-End-to-end plan for building this system. Phased so each phase delivers a
-working vertical slice. See `PROGRESS.md` for live status and `docs/design/`
-for the architecture. We **dogfood**: this repo is built using the very
-process it defines (test-first, curated design, script-driven testing).
+The **backlog lives in GitHub Issues** (per the SDLC's own rule). This file is
+the *narrative* — the phase rationale and the dependency-ordered sequence (the
+readable DAG). It is **not** a task checklist.
 
----
+## How work is tracked
 
-## Phase 0 — Repo foundation & installer  ✅ (in progress → mostly done)
+| Where | Role |
+|---|---|
+| **GitHub Issues** | The backlog — every unit of work. Source of truth for what's queued/active/done. Slug = issue number. |
+| **Milestones** | Phase grouping + order: **Phase 2 → 3 → 4**. |
+| **`Depends on: #N`** (issue body) | Authoritative per-issue gate — an issue is *ready* only when its deps are closed. |
+| **PLAN.md** (this file) | The readable DAG + rationale. |
+| **PROGRESS.md** | The live cursor — current status, active issue, next action, session log. |
 
-Goal: a versioned, safely-installable skeleton.
+**Selection rule (what's next):** the earliest open milestone's issue whose
+`Depends on` are all closed, in the order listed below.
 
-- [x] `git init`, `VERSION`, `.gitignore`
-- [x] `apply.sh` — copy payload → `~/.claude`, manifest + version stamp,
-      `--status/--dry-run/--uninstall/--force/--source/--target`, collision guard,
-      stale removal (bash 3.2 compatible)
-- [x] `tests/test_apply.sh` — 7 behaviors, 27 assertions, green
-- [x] `docs/design/overview.md`, `PLAN.md`, `PROGRESS.md`
-- [ ] `test.sh` — the repo's own single test entrypoint (runs all tests)
-- [ ] `release.sh` — bump `VERSION`, tag, (later) publish
-- [ ] Pre-push hook + GitHub Actions CI for THIS repo (dogfood addition #3)
-- [ ] 6-section `README.md` for this repo
-- [ ] First commit / push; migrate backlog to GitHub Issues (dogfood addition #1)
+## Phase 0 — Foundation & installer ✅ done
 
-**Verify:** `bash test.sh` green; `apply.sh --dry-run` shows a sane plan.
+`apply.sh` (versioned installer) + tests, `test.sh`/`release.sh`, pre-push + CI,
+README, design docs. Repo pushed; CI green.
 
----
+## Phase 1 — `/newproject` slice ✅ done
 
-## Phase 1 — Core spine + `/newproject` end-to-end
+Core scaffolder (`scaffold.sh` + templates) + shell profile (bats, cross-shell,
+brew) + `/newproject` command. Proven end-to-end; applied to `~/.claude` (v0.1.0).
+Closed #1, #5, #6.
 
-Goal: prove one command works start-to-finish via the gate engine + shell profile.
+## Phase 2 — `/feature` + first self-hosted feature ([milestone](https://github.com/Sdaas/claude-sdlc/milestones))
 
-- [ ] `sdlc-common` skill — tier definitions, governance matrix, artifact
-      conventions, branching policy, backlog/issue conventions
-- [ ] `sdlc-orchestrator` skill — classify → tier → walk gates; branch policy
-      (trivial→main, else own branch); SESSION_STATE for `/resume`
-- [ ] Core gate skills: `interview`, `design`, `plan`, `tdd`, `code-review`,
-      `review-guide`, `commit`
-- [ ] `profile-shell` — test runner (bats/plain bash), shellcheck/shfmt,
-      layout, brew packaging hooks, shell review checklist
-- [ ] `/newproject` command — interview → scaffold (README 6 sections, `design/`,
-      `test.sh`, `release.sh`, pre-push hook, GitHub Actions CI, git init,
-      first issue conventions)
-- [ ] **Prove:** run `/newproject` to create a real throwaway shell tool repo,
-      end-to-end, and confirm the scaffold + first `/feature` works.
+Rationale: build the tool that lets the SDLC build itself, then prove it by using
+it. Self-hosted on **this repo only** until it graduates (see the self-hosting
+strategy in memory / design docs).
 
-**Design-first sub-step (before coding `/newproject`):** nail the interview
-questions and the exact scaffold tree per profile; get human approval.
+Sequence:
+```
+#2  sdlc-common SKILL.md  (tiers, paths, governance, conventions)
+      → #12 /feature command (embedded gates; code + prose paths)
+            → #13 python profile   ← FIRST feature built *by* /feature (shakedown)
+#8  README Setup + deps script      (parallel — no hard dependency)
+```
 
----
+## Phase 3 — more commands, profiles, deploy
 
-## Phase 2 — Python profile + full gate set
+All depend on **#12** (`/feature`). Parallelizable once it exists:
+```
+#14 /bugfix   #15 deploy(brew)   #16 profile-sql   #17 profile-frontend
+#18 /retrospective   #19 /resume
+```
 
-- [ ] `profile-python` — pytest, ruff/black, `src/` layout, packaging
-      (reuse the old template scaffold only where it earns its place)
-- [ ] Remaining gates: `design-review`, `plan-review`, `security-review`,
-      `retrospective` (feature + session modes)
-- [ ] `/feature` and `/bugfix` commands (issue-linked, reproduce-first for bugs)
-- [ ] Subagent-isolated TDD (test-writer can't see impl plan)
+## Phase 4 — refactor, adopt, migrate
 
----
+```
+#20 /harden               (depends on #12)
+#11 extract orchestrator  (depends on #14, #20 — only once multiple callers exist)
+#4  extract gate skills   (tech-debt; after the embedded version proves out)
+#21 migrate global shell skills into profile-shell
+#22 model/token optimization
+```
 
-## Phase 3 — Deploy + lightweight SQL/frontend profiles
+## Cross-cutting principles
 
-- [ ] `deploy` gate — brew formula packaging (asked in interview), release flow
-- [ ] `profile-sql` (migrations/seeds/queries) — lightweight
-- [ ] `profile-frontend` — lightweight
-- [ ] `release.sh` conventions per profile
-
----
-
-## Phase 4 — Harden, adopt, migrate
-
-- [ ] `/harden` — retrofit SDLC onto an existing non-SDLC repo
-- [ ] CI/hooks installer as a reusable gate action
-- [ ] Migrate existing global shell skills (`zsh-script`, `add-shell-feature`,
-      `fix-shell-bug`, `harden-shell-repo`) into `profile-shell`; retire duplicates
-- [ ] Model/token-usage optimization (previously deferred)
-
----
-
-## Cross-cutting principles (apply to every phase)
-
-- **Backlog = GitHub Issues.** Work items are issues; slug = issue number.
-- **Branching.** Trivial → main; everything else → own branch.
-- **CI + pre-push.** Tests must be green before push and before merge.
-- **Review guide.** Every implementation ends with a changed-file list +
-  recommended review order.
-- **Test-first.** Red → green → refactor; all testing via `test.sh`.
-- **HITL.** Human approves at each gate; agent proposes, never bulldozes.
+Backlog = Issues · trivial→main / else branch · tests green before push & merge ·
+review guide + **review-before-commit (rule #10)** · test-first · HITL at every gate.
