@@ -11,7 +11,11 @@ cd "$REPO_ROOT" || exit 1
 
 FAILED=0
 
-SHELL_FILES=(apply.sh test.sh release.sh install-hooks.sh hooks/pre-push tests/test_apply.sh)
+SHELL_FILES=(
+	apply.sh test.sh release.sh install-hooks.sh hooks/pre-push
+	tests/test_apply.sh tests/test_scaffold.sh
+	payload/skills/sdlc-common/scaffold.sh
+)
 
 echo "==> shellcheck"
 if command -v shellcheck >/dev/null 2>&1; then
@@ -32,6 +36,14 @@ if bash tests/test_apply.sh; then
 	echo "    apply tests passed"
 else
 	echo "    apply tests FAILED"
+	FAILED=1
+fi
+
+echo "==> tests/test_scaffold.sh"
+if bash tests/test_scaffold.sh; then
+	echo "    scaffold tests passed"
+else
+	echo "    scaffold tests FAILED"
 	FAILED=1
 fi
 

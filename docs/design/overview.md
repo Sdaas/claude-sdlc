@@ -25,8 +25,8 @@ LAYER 1 · ENTRY COMMANDS (global, ~/.claude/commands)
         │ drives
 LAYER 2 · GATES (reusable, stack-agnostic skills)
    interview → design → design-review → plan → plan-review → tdd →
-   code-review(2-pass) → security-review → review-guide → commit →
-   pre-push → ci-monitor → retrospective
+   code-review(2-pass) → security-review → review-guide →
+   HUMAN REVIEW (approval gate) → commit → pre-push → ci-monitor → retrospective
         │ calls into
 LAYER 3 · STACK PROFILES (the concrete "how")
    shell │ python │ sql │ frontend
@@ -39,8 +39,11 @@ LAYER 3 · STACK PROFILES (the concrete "how")
 | Tier | Branch | Gate path |
 |---|---|---|
 | **Quick** | **main** | classify → surgical change → verify → commit |
-| **Standard** | own branch | interview(light) → design(brief) → tdd → code-review → review-guide → commit → pre-push |
+| **Standard** | own branch | interview(light) → design(brief) → tdd → code-review → review-guide → **human review** → commit → pre-push |
 | **Full** | own branch | every gate incl. design-review, plan-review, security-review, deploy(±brew), retrospective |
+
+Even at **Quick** tier, the surgical change is shown to the human before it is
+committed. **No tier ever commits before the human has approved.**
 
 The orchestrator proposes a tier at CLASSIFY; the human confirms or overrides.
 
@@ -95,6 +98,12 @@ The orchestrator proposes a tier at CLASSIFY; the human confirms or overrides.
    a **recommended review order**, and a one-line "why this file matters / where
    the key change is" for each. The human never has to guess which files hold
    the substance. This is its own gate (`review-guide`).
+10. **Review before commit (hard rule).** The agent **never commits or pushes
+    before the human has reviewed and approved.** The order is always: implement
+    → present the review guide + working-tree changes → **human reviews** →
+    on approval, commit and push. Committing first and reviewing after is
+    forbidden — it turns review into a rubber stamp. Applies to every tier,
+    including Quick, and to docs as well as code.
 
 ## Governance matrix (who acts, who approves)
 
@@ -106,7 +115,8 @@ The orchestrator proposes a tier at CLASSIFY; the human confirms or overrides.
 | TDD / CODE | acts | spot-checks |
 | CODE / SECURITY REVIEW | performs | reviews findings |
 | REVIEW GUIDE | produces map | reviews the code |
-| COMMIT / MERGE | prepares | approves (needs green CI) |
+| HUMAN REVIEW | waits | **approves before any commit** |
+| COMMIT / MERGE | commits only after approval | approves merge (needs green CI) |
 | RETROSPECTIVE | drafts | confirms lessons |
 
 ## Out of scope (for now)

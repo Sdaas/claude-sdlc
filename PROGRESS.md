@@ -11,14 +11,16 @@ Live status for building this SDLC, designed to survive across sessions.
 
 ## ▶ Current status
 
-- **Phase:** 0 (repo foundation & installer) — **complete**
-- **Last done:** README (6 sections), `test.sh`, `release.sh`, pre-push hook +
-  installer, GitHub Actions CI. Full suite green (27/27, shellcheck clean).
-  First commit + push to GitHub, backlog seeded as Issues.
-- **NEXT ACTION:** Phase 1 — **design `/newproject`** first (interview questions
-  + exact scaffold tree per profile), get human approval, THEN build
-  `sdlc-common` + `sdlc-orchestrator` + `profile-shell` + `/newproject`
-  test-first.
+- **Phase:** 1 (core spine + `/newproject`) — in progress
+- **Last done:** `/newproject` designed (`docs/design/newproject.md`); **core
+  scaffolder** built test-first (`scaffold.sh` + core templates, 25 assertions);
+  codified **"review before commit" hard rule** into the SDLC (overview.md).
+  PR #7 merged to main; suite green (52 assertions), CI green.
+- **NEXT ACTION:** build the **shell profile** templates (bats-based `test.sh`
+  runnable under bash AND zsh, `release.sh`, `bin/<tool>`, `<tool>.bats`,
+  optional brew `Formula/`), test-first — then wire the **`/newproject` command**
+  (interview → scaffold.sh → git init → optional `gh repo create` → first commit).
+- **PROCESS REMINDER:** never commit/push before human review + approval (rule #10).
 
 ---
 
@@ -76,6 +78,16 @@ Newest first. One short entry per working session.
 - **Open:** finish Phase 0 tail; then design `/newproject` before coding it.
 
 ---
+
+### 2026-07-31 — Session 1 (cont.)
+- Designed `/newproject`; decisions: bats + cross-shell tests, CLAUDE.md stack
+  marker, ask/default-private repo, interview = core 6 + constraints + design/UX.
+- Built the core scaffolder test-first (`scaffold.sh` + core templates); 25
+  assertions green.
+- **Correction:** committed PR #7 before human review — inverted the gate order.
+  Codified **rule #10 "review before commit"** into overview.md + saved as
+  feedback memory. Human approved design edits + PR #7; PR #7 merged.
+- **Next:** shell profile templates, then `/newproject` command wiring.
 
 ## Conventions for updating this file
 

@@ -1,0 +1,46 @@
+# {{NAME}}
+
+{{PURPOSE}}
+
+---
+
+## Purpose
+
+{{PURPOSE}}
+
+This is a {{ARCHETYPE}} ({{PROFILE}}). It is developed using an agentic SDLC:
+interview → design → test-first code → review → ship, with a human in the loop.
+
+## Quick Start
+
+```bash
+git clone <repo-url>
+cd {{NAME}}
+./install-hooks.sh     # install the pre-push test gate
+./test.sh              # run the tests
+```
+
+## User Guide
+
+<!-- How an end user runs and uses {{NAME}}. Filled in as features land. -->
+Run `{{NAME}} --help` for usage.
+
+## Developer Guide
+
+<!-- Layout, how to add a feature, conventions. See design/overview.md. -->
+The end-to-end design and key decisions live in [`design/overview.md`](design/overview.md).
+
+## Automated Testing Guide
+
+All tests run through a single entrypoint:
+
+```bash
+./test.sh
+```
+
+This is what the pre-push hook and CI both call — green locally means green on push.
+
+## Release Process
+
+Releases are automated through `release.sh` (bump version, tag, push).
+Distribution: **{{DISTRIBUTION}}**.
