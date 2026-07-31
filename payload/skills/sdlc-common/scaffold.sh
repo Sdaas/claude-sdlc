@@ -76,6 +76,9 @@ for _part in $NAME; do
 done
 IFS="$_saved_ifs"
 
+# Python package name: lowercase, hyphens/spaces -> underscores (my-tool -> my_tool).
+PKG="$(printf '%s' "$NAME" | tr '[:upper:]' '[:lower:]' | tr ' -' '__')"
+
 # --- non-empty guard --------------------------------------------------------
 if [[ -d "$TARGET" ]] && [[ -n "$(ls -A "$TARGET" 2>/dev/null || true)" ]]; then
 	$FORCE || die "target not empty: $TARGET (use --force)"
@@ -94,8 +97,25 @@ render() {
 	content="${content//\{\{AUTHOR\}\}/$AUTHOR}"
 	content="${content//\{\{YEAR\}\}/$YEAR}"
 	content="${content//\{\{CLASS\}\}/$CLASS}"
+	content="${content//\{\{PKG\}\}/$PKG}"
 	mkdir -p "$(dirname "$dst")"
 	printf '%s\n' "$content" >"$dst"
+}
+
+# Render the python-profile files (pyproject, src/<pkg>, tests, test.sh via uv).
+render_python_profile() {
+	local pt
+	pt="$(dirname "$SCRIPT_DIR")/profile-python/templates"
+	[[ -d "$pt" ]] || die "no profile-python templates at: $pt"
+	render "$pt/pyproject.toml.tmpl" "$TARGET/pyproject.toml"
+	render "$pt/init.py.tmpl" "$TARGET/src/$PKG/__init__.py"
+	render "$pt/cli.py.tmpl" "$TARGET/src/$PKG/cli.py"
+	render "$pt/test-pkg.py.tmpl" "$TARGET/tests/test_$PKG.py"
+	render "$pt/test.sh.tmpl" "$TARGET/test.sh"
+	render "$pt/release.sh.tmpl" "$TARGET/release.sh"
+	# Python CI installs uv — overrides the generic core CI.
+	render "$pt/ci.yml.tmpl" "$TARGET/.github/workflows/ci.yml"
+	chmod +x "$TARGET/test.sh" "$TARGET/release.sh"
 }
 
 # Render the shell-profile files (test.sh via bats, tool, release, CI, formula).
@@ -148,7 +168,8 @@ chmod +x "$TARGET/hooks/pre-push" "$TARGET/install-hooks.sh"
 # --- stack profile ----------------------------------------------------------
 case "$PROFILE" in
 shell) render_shell_profile ;;
-python | sql | frontend)
+python) render_python_profile ;;
+sql | frontend)
 	echo "note: profile '$PROFILE' not yet implemented — core skeleton only"
 	;;
 *) die "unknown profile: $PROFILE" ;;

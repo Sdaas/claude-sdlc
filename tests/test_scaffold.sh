@@ -152,6 +152,64 @@ test_generated_shellcheck() {
 	rm -rf "$(dirname "$tgt")"
 }
 
+scaffold_py() { # target [extra args...]
+	"$SCAFFOLD" --target "$1" --name "my-tool" \
+		--purpose "Do things with tasks." --profile python \
+		--archetype cli --distribution none --license mit \
+		--author "Ada Lovelace" "${@:2}"
+}
+
+# --- Test 8: python profile files generated ---------------------------------
+test_python_profile_files() {
+	start "python profile generates pyproject, src/<pkg>, tests, test.sh"
+	local tgt; tgt="$(mktemp -d)/proj"
+	scaffold_py "$tgt" >/dev/null 2>&1
+	assert_exists "$tgt/pyproject.toml" "pyproject.toml exists"
+	assert_exists "$tgt/src/my_tool/__init__.py" "package dir uses underscores (my_tool)"
+	assert_exists "$tgt/src/my_tool/cli.py" "cli.py exists"
+	assert_exists "$tgt/tests/test_my_tool.py" "pytest module exists"
+	assert_exec "$tgt/test.sh" "test.sh is executable"
+	assert_contains "$tgt/pyproject.toml" "my-tool" "pyproject has project name"
+	assert_contains "$tgt/pyproject.toml" "requires-python" "pyproject pins python"
+	assert_contains "$tgt/pyproject.toml" "3.11" "pyproject targets 3.11"
+	assert_contains "$tgt/pyproject.toml" "hatchling" "pyproject uses hatchling"
+	assert_contains "$tgt/pyproject.toml" "ruff" "pyproject includes ruff"
+	assert_contains "$tgt/src/my_tool/cli.py" "argparse" "cli uses argparse"
+	assert_absent_str "$tgt/pyproject.toml" "{{" "no leftover placeholders in pyproject"
+	assert_absent_str "$tgt/src/my_tool/cli.py" "{{" "no leftover placeholders in cli.py"
+	# python profile should NOT emit shell-only files
+	assert_absent_str "$tgt/bin/my-tool" "usage" "no shell bin/ for python profile"
+	rm -rf "$(dirname "$tgt")"
+}
+
+# --- Test 9: python test.sh guards on uv (dev dependency) --------------------
+test_python_uv_guard() {
+	start "generated python test.sh checks uv and runs pytest"
+	local tgt; tgt="$(mktemp -d)/proj"
+	scaffold_py "$tgt" >/dev/null 2>&1
+	assert_contains "$tgt/test.sh" "command -v uv" "test.sh checks for uv"
+	assert_contains "$tgt/test.sh" "pytest" "test.sh runs pytest"
+	assert_contains "$tgt/test.sh" "ruff" "test.sh runs ruff"
+	rm -rf "$(dirname "$tgt")"
+}
+
+# --- Test 10: generated python shell scripts pass shellcheck ----------------
+test_python_generated_shellcheck() {
+	start "generated python shell scripts are shellcheck-clean"
+	if ! command -v shellcheck >/dev/null 2>&1; then
+		pass "shellcheck not installed — skipped"
+		return
+	fi
+	local tgt; tgt="$(mktemp -d)/proj"
+	scaffold_py "$tgt" >/dev/null 2>&1
+	if shellcheck "$tgt/test.sh" "$tgt/release.sh" "$tgt/hooks/pre-push" "$tgt/install-hooks.sh" >/dev/null 2>&1; then
+		pass "generated python scripts pass shellcheck"
+	else
+		fail "generated python scripts have shellcheck findings"
+	fi
+	rm -rf "$(dirname "$tgt")"
+}
+
 echo "Running scaffold tests against: $SCAFFOLD"
 echo
 test_core_files
@@ -161,6 +219,9 @@ test_shell_profile_files
 test_bats_dependency_guard
 test_formula_conditional
 test_generated_shellcheck
+test_python_profile_files
+test_python_uv_guard
+test_python_generated_shellcheck
 echo
 printf 'Results: %d passed, %d failed\n' "$PASS" "$FAIL"
 [[ "$FAIL" -eq 0 ]]

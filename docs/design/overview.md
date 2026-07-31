@@ -119,6 +119,12 @@ The orchestrator proposes a tier at CLASSIFY; the human confirms or overrides.
 | COMMIT / MERGE | commits only after approval | approves merge (needs green CI) |
 | RETROSPECTIVE | drafts | confirms lessons |
 
+## Stack profiles (implemented)
+
+- **shell** — bats (cross-shell bash+zsh), shellcheck, `bin/<tool>`, brew Formula.
+- **python** — `uv` + hatchling, `src/<pkg>` layout, stdlib argparse CLI, `ruff`
+  (lint+format), pytest, `requires-python >= 3.11`. `test.sh` guards on `uv`.
+
 ## Out of scope (for now)
 
 - Model/token-usage optimization (deferred).
