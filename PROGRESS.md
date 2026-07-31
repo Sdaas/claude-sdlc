@@ -11,15 +11,18 @@ Live status for building this SDLC, designed to survive across sessions.
 
 ## ▶ Current status
 
-- **Phase:** 1 (core spine + `/newproject`) — in progress
-- **Last done:** `/newproject` designed (`docs/design/newproject.md`); **core
-  scaffolder** built test-first (`scaffold.sh` + core templates, 25 assertions);
-  codified **"review before commit" hard rule** into the SDLC (overview.md).
-  PR #7 merged to main; suite green (52 assertions), CI green.
-- **NEXT ACTION:** build the **shell profile** templates (bats-based `test.sh`
-  runnable under bash AND zsh, `release.sh`, `bin/<tool>`, `<tool>.bats`,
-  optional brew `Formula/`), test-first — then wire the **`/newproject` command**
-  (interview → scaffold.sh → git init → optional `gh repo create` → first commit).
+- **Phase:** 1 (core spine + `/newproject`) — **`/newproject` slice complete**
+- **Last done:** shell profile (PR #9) + `/newproject` command (PR #10) merged.
+  **Live dry run proved Issue #6** end-to-end (15-file repo, git init + hooks +
+  first commit, new repo's `test.sh` green, bats 5/5 cross-shell). Closed
+  Issues #1, #5, #6. This repo's suite green (64 assertions), CI green.
+- **NOT YET APPLIED:** `apply.sh` has not been run against the real `~/.claude`
+  — the SDLC works from the repo but is not globally installed yet.
+- **NEXT ACTION (pick one):**
+  (a) run `apply.sh` to install globally and use `/newproject` for real; or
+  (b) Phase 2 — the `/feature` workflow for existing repos: `sdlc-common`
+  (tiers/governance, #2), `sdlc-orchestrator` (#3), core gate skills (#4),
+  subagent-isolated TDD.
 - **PROCESS REMINDER:** never commit/push before human review + approval (rule #10).
 
 ---
@@ -88,6 +91,15 @@ Newest first. One short entry per working session.
   Codified **rule #10 "review before commit"** into overview.md + saved as
   feedback memory. Human approved design edits + PR #7; PR #7 merged.
 - **Next:** shell profile templates, then `/newproject` command wiring.
+
+### 2026-07-31 — Session 1 (cont. 2)
+- Built shell profile (PR #9) + `/newproject` command (PR #10), both test-first
+  / reviewed before commit (rule #10 honored).
+- Live `/newproject` dry run proved end-to-end (Issue #6). Closed #1, #5, #6.
+- Suite now 64 assertions (27 apply + 37 scaffold). CI green on main.
+- `/newproject` slice done but SDLC not yet applied to real `~/.claude`.
+- **Next:** either apply globally, or start Phase 2 (`/feature` workflow:
+  sdlc-common #2, orchestrator #3, gates #4).
 
 ## Conventions for updating this file
 
