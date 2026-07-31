@@ -79,6 +79,9 @@ IFS="$_saved_ifs"
 # Python package name: lowercase, hyphens/spaces -> underscores (my-tool -> my_tool).
 PKG="$(printf '%s' "$NAME" | tr '[:upper:]' '[:lower:]' | tr ' -' '__')"
 
+# npm-safe package name: lowercase, spaces/underscores -> hyphens (My Tool -> my-tool).
+SLUG="$(printf '%s' "$NAME" | tr '[:upper:]' '[:lower:]' | tr ' _' '--')"
+
 # --- non-empty guard --------------------------------------------------------
 if [[ -d "$TARGET" ]] && [[ -n "$(ls -A "$TARGET" 2>/dev/null || true)" ]]; then
 	$FORCE || die "target not empty: $TARGET (use --force)"
@@ -98,6 +101,7 @@ render() {
 	content="${content//\{\{YEAR\}\}/$YEAR}"
 	content="${content//\{\{CLASS\}\}/$CLASS}"
 	content="${content//\{\{PKG\}\}/$PKG}"
+	content="${content//\{\{SLUG\}\}/$SLUG}"
 	mkdir -p "$(dirname "$dst")"
 	printf '%s\n' "$content" >"$dst"
 }
@@ -135,6 +139,32 @@ render_shell_profile() {
 	fi
 }
 
+# Render the frontend-profile files (Vite + vanilla TS, npm, vitest, prettier).
+render_frontend_profile() {
+	local ft
+	ft="$(dirname "$SCRIPT_DIR")/profile-frontend/templates"
+	[[ -d "$ft" ]] || die "no profile-frontend templates at: $ft"
+	render "$ft/package.json.tmpl" "$TARGET/package.json"
+	render "$ft/tsconfig.json.tmpl" "$TARGET/tsconfig.json"
+	render "$ft/vite.config.ts.tmpl" "$TARGET/vite.config.ts"
+	render "$ft/index.html.tmpl" "$TARGET/index.html"
+	render "$ft/prettierignore.tmpl" "$TARGET/.prettierignore"
+	render "$ft/main.ts.tmpl" "$TARGET/src/main.ts"
+	render "$ft/main.test.ts.tmpl" "$TARGET/src/main.test.ts"
+	render "$ft/test.sh.tmpl" "$TARGET/test.sh"
+	render "$ft/release.sh.tmpl" "$TARGET/release.sh"
+	# Frontend CI installs Node — overrides the generic core CI.
+	render "$ft/ci.yml.tmpl" "$TARGET/.github/workflows/ci.yml"
+	chmod +x "$TARGET/test.sh" "$TARGET/release.sh"
+	# Ignore node artifacts (appended to the core-rendered .gitignore).
+	{
+		echo ""
+		echo "# node / build"
+		echo "node_modules/"
+		echo "dist/"
+	} >>"$TARGET/.gitignore"
+}
+
 # --- core skeleton ----------------------------------------------------------
 mkdir -p "$TARGET"
 
@@ -169,7 +199,8 @@ chmod +x "$TARGET/hooks/pre-push" "$TARGET/install-hooks.sh"
 case "$PROFILE" in
 shell) render_shell_profile ;;
 python) render_python_profile ;;
-sql | frontend)
+frontend) render_frontend_profile ;;
+sql)
 	echo "note: profile '$PROFILE' not yet implemented — core skeleton only"
 	;;
 *) die "unknown profile: $PROFILE" ;;

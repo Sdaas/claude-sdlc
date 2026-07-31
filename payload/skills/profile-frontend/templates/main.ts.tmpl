@@ -1,0 +1,16 @@
+// {{NAME}} — {{PURPOSE}}
+
+/** The greeting the app renders. Exported as a pure function so it is unit-testable. */
+export function greeting(name: string): string {
+  return `Hello from ${name}.`;
+}
+
+// Bootstrap the DOM only in a browser (guarded so importing this module under
+// the Node test environment does not touch `document`).
+const app =
+  typeof document !== "undefined"
+    ? document.querySelector<HTMLDivElement>("#app")
+    : null;
+if (app) {
+  app.textContent = greeting("{{NAME}}");
+}

@@ -1,0 +1,9 @@
+import { describe, expect, it } from "vitest";
+
+import { greeting } from "./main";
+
+describe("greeting", () => {
+  it("greets by name", () => {
+    expect(greeting("{{NAME}}")).toContain("{{NAME}}");
+  });
+});

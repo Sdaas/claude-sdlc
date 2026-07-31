@@ -210,6 +210,74 @@ test_python_generated_shellcheck() {
 	rm -rf "$(dirname "$tgt")"
 }
 
+scaffold_fe() { # target [extra args...]
+	"$SCAFFOLD" --target "$1" --name "web-widget" \
+		--purpose "A tiny web widget." --profile frontend \
+		--archetype webapp --distribution none --license mit \
+		--author "Ada Lovelace" "${@:2}"
+}
+
+# --- Test 11: frontend profile files generated ------------------------------
+test_frontend_profile_files() {
+	start "frontend profile generates package.json, index.html, src, tests, test.sh"
+	local tgt; tgt="$(mktemp -d)/proj"
+	scaffold_fe "$tgt" >/dev/null 2>&1
+	assert_exists "$tgt/package.json" "package.json exists"
+	assert_exists "$tgt/tsconfig.json" "tsconfig.json exists"
+	assert_exists "$tgt/vite.config.ts" "vite.config.ts exists"
+	assert_exists "$tgt/index.html" "index.html exists"
+	assert_exists "$tgt/src/main.ts" "src/main.ts exists"
+	assert_exists "$tgt/src/main.test.ts" "vitest suite exists"
+	assert_exec "$tgt/test.sh" "test.sh is executable"
+	assert_exec "$tgt/release.sh" "release.sh is executable"
+	assert_contains "$tgt/package.json" "web-widget" "package.json has project name"
+	assert_contains "$tgt/package.json" "\"vite\"" "package.json depends on vite"
+	assert_contains "$tgt/package.json" "vitest" "package.json depends on vitest"
+	assert_contains "$tgt/package.json" "typescript" "package.json depends on typescript"
+	assert_contains "$tgt/package.json" "prettier" "package.json depends on prettier"
+	assert_contains "$tgt/tsconfig.json" "strict" "tsconfig is strict"
+	assert_contains "$tgt/src/main.ts" "export" "main.ts exports a testable symbol"
+	assert_contains "$tgt/index.html" "src/main.ts" "index.html loads the entry module"
+	assert_contains "$tgt/.gitignore" "node_modules" ".gitignore ignores node_modules"
+	assert_exists "$tgt/.prettierignore" ".prettierignore exists"
+	assert_contains "$tgt/.prettierignore" "README.md" ".prettierignore scopes off core docs"
+	assert_absent_str "$tgt/package.json" "{{" "no leftover placeholders in package.json"
+	assert_absent_str "$tgt/src/main.ts" "{{" "no leftover placeholders in main.ts"
+	# frontend profile should NOT emit shell- or python-only files
+	assert_absent_str "$tgt/bin/web-widget" "Usage" "no shell bin/ for frontend profile"
+	assert_absent_str "$tgt/pyproject.toml" "hatchling" "no pyproject for frontend profile"
+	rm -rf "$(dirname "$tgt")"
+}
+
+# --- Test 12: frontend test.sh guards on node/npm ---------------------------
+test_frontend_node_guard() {
+	start "generated frontend test.sh checks node/npm and runs tsc + prettier + vitest"
+	local tgt; tgt="$(mktemp -d)/proj"
+	scaffold_fe "$tgt" >/dev/null 2>&1
+	assert_contains "$tgt/test.sh" "command -v npm" "test.sh checks for npm"
+	assert_contains "$tgt/test.sh" "vitest" "test.sh runs vitest"
+	assert_contains "$tgt/test.sh" "tsc" "test.sh type-checks with tsc"
+	assert_contains "$tgt/test.sh" "prettier" "test.sh checks formatting"
+	rm -rf "$(dirname "$tgt")"
+}
+
+# --- Test 13: generated frontend shell scripts pass shellcheck --------------
+test_frontend_generated_shellcheck() {
+	start "generated frontend shell scripts are shellcheck-clean"
+	if ! command -v shellcheck >/dev/null 2>&1; then
+		pass "shellcheck not installed — skipped"
+		return
+	fi
+	local tgt; tgt="$(mktemp -d)/proj"
+	scaffold_fe "$tgt" >/dev/null 2>&1
+	if shellcheck "$tgt/test.sh" "$tgt/release.sh" "$tgt/hooks/pre-push" "$tgt/install-hooks.sh" >/dev/null 2>&1; then
+		pass "generated frontend scripts pass shellcheck"
+	else
+		fail "generated frontend scripts have shellcheck findings"
+	fi
+	rm -rf "$(dirname "$tgt")"
+}
+
 echo "Running scaffold tests against: $SCAFFOLD"
 echo
 test_core_files
@@ -222,6 +290,9 @@ test_generated_shellcheck
 test_python_profile_files
 test_python_uv_guard
 test_python_generated_shellcheck
+test_frontend_profile_files
+test_frontend_node_guard
+test_frontend_generated_shellcheck
 echo
 printf 'Results: %d passed, %d failed\n' "$PASS" "$FAIL"
 [[ "$FAIL" -eq 0 ]]
