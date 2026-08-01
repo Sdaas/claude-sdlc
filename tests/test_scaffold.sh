@@ -62,6 +62,30 @@ test_core_files() {
 	assert_exists "$tgt/.github/workflows/ci.yml" "CI workflow exists"
 	assert_exec "$tgt/hooks/pre-push" "pre-push hook is executable"
 	assert_exec "$tgt/install-hooks.sh" "install-hooks.sh is executable"
+	assert_exec "$tgt/setup.sh" "setup.sh is executable"
+	rm -rf "$(dirname "$tgt")"
+}
+
+# --- Test: README documents Setup + ./setup.sh ------------------------------
+test_readme_setup_section() {
+	start "generated README has a Setup section pointing at ./setup.sh"
+	local tgt; tgt="$(mktemp -d)/proj"
+	scaffold_sample "$tgt" >/dev/null 2>&1
+	assert_contains "$tgt/README.md" "## Setup" "README has a Setup heading"
+	assert_contains "$tgt/README.md" "./setup.sh" "README tells devs to run ./setup.sh"
+	rm -rf "$(dirname "$tgt")"
+}
+
+# --- Test: setup.sh carries profile-appropriate deps ------------------------
+# shell profile -> shellcheck + bats-core; every profile -> git + gh.
+test_setup_deps_shell() {
+	start "shell profile setup.sh lists shellcheck + bats-core"
+	local tgt; tgt="$(mktemp -d)/proj"
+	scaffold_sample "$tgt" >/dev/null 2>&1
+	assert_contains "$tgt/setup.sh" "shellcheck" "setup.sh checks shellcheck"
+	assert_contains "$tgt/setup.sh" "bats" "setup.sh checks bats"
+	assert_contains "$tgt/setup.sh" "gh" "setup.sh checks gh"
+	assert_absent_str "$tgt/setup.sh" "{{" "no leftover placeholders in setup.sh"
 	rm -rf "$(dirname "$tgt")"
 }
 
@@ -144,7 +168,7 @@ test_generated_shellcheck() {
 	fi
 	local tgt; tgt="$(mktemp -d)/proj"
 	scaffold_sample "$tgt" >/dev/null 2>&1
-	if shellcheck "$tgt/bin/widgetron" "$tgt/test.sh" "$tgt/release.sh" "$tgt/hooks/pre-push" "$tgt/install-hooks.sh" >/dev/null 2>&1; then
+	if shellcheck "$tgt/bin/widgetron" "$tgt/test.sh" "$tgt/release.sh" "$tgt/setup.sh" "$tgt/hooks/pre-push" "$tgt/install-hooks.sh" >/dev/null 2>&1; then
 		pass "generated scripts pass shellcheck"
 	else
 		fail "generated scripts have shellcheck findings"
@@ -193,6 +217,19 @@ test_python_uv_guard() {
 	rm -rf "$(dirname "$tgt")"
 }
 
+# --- Test: python profile setup.sh lists uv ---------------------------------
+test_setup_deps_python() {
+	start "python profile setup.sh checks uv (and git/gh), not bats"
+	local tgt; tgt="$(mktemp -d)/proj"
+	scaffold_py "$tgt" >/dev/null 2>&1
+	assert_exec "$tgt/setup.sh" "setup.sh is executable"
+	assert_contains "$tgt/setup.sh" "uv" "setup.sh checks uv"
+	assert_contains "$tgt/setup.sh" "gh" "setup.sh checks gh"
+	assert_absent_str "$tgt/setup.sh" "bats" "python setup.sh does not check bats"
+	assert_absent_str "$tgt/setup.sh" "{{" "no leftover placeholders in setup.sh"
+	rm -rf "$(dirname "$tgt")"
+}
+
 # --- Test 10: generated python shell scripts pass shellcheck ----------------
 test_python_generated_shellcheck() {
 	start "generated python shell scripts are shellcheck-clean"
@@ -202,7 +239,7 @@ test_python_generated_shellcheck() {
 	fi
 	local tgt; tgt="$(mktemp -d)/proj"
 	scaffold_py "$tgt" >/dev/null 2>&1
-	if shellcheck "$tgt/test.sh" "$tgt/release.sh" "$tgt/hooks/pre-push" "$tgt/install-hooks.sh" >/dev/null 2>&1; then
+	if shellcheck "$tgt/test.sh" "$tgt/release.sh" "$tgt/setup.sh" "$tgt/hooks/pre-push" "$tgt/install-hooks.sh" >/dev/null 2>&1; then
 		pass "generated python scripts pass shellcheck"
 	else
 		fail "generated python scripts have shellcheck findings"
@@ -261,6 +298,19 @@ test_frontend_node_guard() {
 	rm -rf "$(dirname "$tgt")"
 }
 
+# --- Test: frontend profile setup.sh lists node -----------------------------
+test_setup_deps_frontend() {
+	start "frontend profile setup.sh checks node (and git/gh), not bats/uv"
+	local tgt; tgt="$(mktemp -d)/proj"
+	scaffold_fe "$tgt" >/dev/null 2>&1
+	assert_exec "$tgt/setup.sh" "setup.sh is executable"
+	assert_contains "$tgt/setup.sh" "node" "setup.sh checks node"
+	assert_contains "$tgt/setup.sh" "gh" "setup.sh checks gh"
+	assert_absent_str "$tgt/setup.sh" "bats" "frontend setup.sh does not check bats"
+	assert_absent_str "$tgt/setup.sh" "{{" "no leftover placeholders in setup.sh"
+	rm -rf "$(dirname "$tgt")"
+}
+
 # --- Test 13: generated frontend shell scripts pass shellcheck --------------
 test_frontend_generated_shellcheck() {
 	start "generated frontend shell scripts are shellcheck-clean"
@@ -270,7 +320,7 @@ test_frontend_generated_shellcheck() {
 	fi
 	local tgt; tgt="$(mktemp -d)/proj"
 	scaffold_fe "$tgt" >/dev/null 2>&1
-	if shellcheck "$tgt/test.sh" "$tgt/release.sh" "$tgt/hooks/pre-push" "$tgt/install-hooks.sh" >/dev/null 2>&1; then
+	if shellcheck "$tgt/test.sh" "$tgt/release.sh" "$tgt/setup.sh" "$tgt/hooks/pre-push" "$tgt/install-hooks.sh" >/dev/null 2>&1; then
 		pass "generated frontend scripts pass shellcheck"
 	else
 		fail "generated frontend scripts have shellcheck findings"
@@ -281,6 +331,8 @@ test_frontend_generated_shellcheck() {
 echo "Running scaffold tests against: $SCAFFOLD"
 echo
 test_core_files
+test_readme_setup_section
+test_setup_deps_shell
 test_substitutions
 test_nonempty_guard
 test_shell_profile_files
@@ -289,9 +341,11 @@ test_formula_conditional
 test_generated_shellcheck
 test_python_profile_files
 test_python_uv_guard
+test_setup_deps_python
 test_python_generated_shellcheck
 test_frontend_profile_files
 test_frontend_node_guard
+test_setup_deps_frontend
 test_frontend_generated_shellcheck
 echo
 printf 'Results: %d passed, %d failed\n' "$PASS" "$FAIL"

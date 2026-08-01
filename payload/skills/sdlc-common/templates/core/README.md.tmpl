@@ -16,9 +16,27 @@ interview → design → test-first code → review → ship, with a human in th
 ```bash
 git clone <repo-url>
 cd {{NAME}}
+./setup.sh             # check / install developer dependencies
 ./install-hooks.sh     # install the pre-push test gate
 ./test.sh              # run the tests
 ```
+
+## Setup
+
+This is a **{{PROFILE}}** project. Developer dependencies:
+
+- **git**, **gh** (GitHub CLI) — version control and the issue backlog.
+- plus the toolchain your test suite needs (see the `Dev dependency:` note at
+  the top of `test.sh`).
+
+Run the checker to see what's missing and install it (macOS/Homebrew):
+
+```bash
+./setup.sh          # prompts before installing anything
+./setup.sh --yes    # install without prompting (CI / non-interactive)
+```
+
+On other platforms `setup.sh` reports what to install by hand.
 
 ## User Guide
 

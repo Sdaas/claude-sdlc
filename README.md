@@ -88,7 +88,26 @@ PLAN.md, PROGRESS.md  Build plan and cross-session tracker
 This repo **dogfoods** its own process: changes are made test-first, the design
 lives in `design/`, and all testing/release runs through shell scripts.
 
-Install the local git hooks after cloning:
+### Setup
+
+Developer dependencies:
+
+| Tool | Why |
+|---|---|
+| `git` | version control |
+| `gh` (GitHub CLI) | the issue backlog + PRs |
+| `shellcheck` | lints every shell script in `./test.sh` |
+| `bash`, `zsh` | run/target shells (present on macOS by default) |
+
+`setup.sh` checks these and offers to install the missing ones (macOS/Homebrew):
+
+```bash
+./setup.sh          # check deps; prompt before installing anything
+./setup.sh --yes    # install missing deps without prompting (CI-friendly)
+```
+
+On non-macOS systems it reports what to install by hand. Then install the local
+git hooks:
 
 ```bash
 ./install-hooks.sh

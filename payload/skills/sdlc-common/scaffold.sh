@@ -119,7 +119,9 @@ render_python_profile() {
 	render "$pt/release.sh.tmpl" "$TARGET/release.sh"
 	# Python CI installs uv — overrides the generic core CI.
 	render "$pt/ci.yml.tmpl" "$TARGET/.github/workflows/ci.yml"
-	chmod +x "$TARGET/test.sh" "$TARGET/release.sh"
+	# setup.sh lists uv on top of git/gh — overrides the generic core setup.sh.
+	render "$pt/setup.sh.tmpl" "$TARGET/setup.sh"
+	chmod +x "$TARGET/test.sh" "$TARGET/release.sh" "$TARGET/setup.sh"
 }
 
 # Render the shell-profile files (test.sh via bats, tool, release, CI, formula).
@@ -133,7 +135,9 @@ render_shell_profile() {
 	render "$st/release.sh.tmpl" "$TARGET/release.sh"
 	# Shell CI installs bats/zsh — overrides the generic core CI.
 	render "$st/ci.yml.tmpl" "$TARGET/.github/workflows/ci.yml"
-	chmod +x "$TARGET/bin/$NAME" "$TARGET/test.sh" "$TARGET/release.sh"
+	# setup.sh lists shellcheck/bats on top of git/gh — overrides core setup.sh.
+	render "$st/setup.sh.tmpl" "$TARGET/setup.sh"
+	chmod +x "$TARGET/bin/$NAME" "$TARGET/test.sh" "$TARGET/release.sh" "$TARGET/setup.sh"
 	if [[ "$DISTRIBUTION" == "brew" ]]; then
 		render "$st/formula.rb.tmpl" "$TARGET/Formula/$NAME.rb"
 	fi
@@ -155,7 +159,9 @@ render_frontend_profile() {
 	render "$ft/release.sh.tmpl" "$TARGET/release.sh"
 	# Frontend CI installs Node — overrides the generic core CI.
 	render "$ft/ci.yml.tmpl" "$TARGET/.github/workflows/ci.yml"
-	chmod +x "$TARGET/test.sh" "$TARGET/release.sh"
+	# setup.sh lists node on top of git/gh — overrides the generic core setup.sh.
+	render "$ft/setup.sh.tmpl" "$TARGET/setup.sh"
+	chmod +x "$TARGET/test.sh" "$TARGET/release.sh" "$TARGET/setup.sh"
 	# Ignore node artifacts (appended to the core-rendered .gitignore).
 	{
 		echo ""
@@ -174,6 +180,7 @@ render "$TEMPLATES/core/CLAUDE.md.tmpl" "$TARGET/CLAUDE.md"
 render "$TEMPLATES/core/design-overview.md.tmpl" "$TARGET/design/overview.md"
 render "$TEMPLATES/core/pre-push.tmpl" "$TARGET/hooks/pre-push"
 render "$TEMPLATES/core/install-hooks.sh.tmpl" "$TARGET/install-hooks.sh"
+render "$TEMPLATES/core/setup.sh.tmpl" "$TARGET/setup.sh"
 render "$TEMPLATES/core/ci.yml.tmpl" "$TARGET/.github/workflows/ci.yml"
 
 printf '0.1.0\n' >"$TARGET/VERSION"
@@ -193,7 +200,7 @@ mit | apache)
 esac
 
 # --- executable bits --------------------------------------------------------
-chmod +x "$TARGET/hooks/pre-push" "$TARGET/install-hooks.sh"
+chmod +x "$TARGET/hooks/pre-push" "$TARGET/install-hooks.sh" "$TARGET/setup.sh"
 
 # --- stack profile ----------------------------------------------------------
 case "$PROFILE" in
