@@ -60,6 +60,7 @@ The orchestrator proposes a tier at CLASSIFY; the human confirms or overrides.
 | `/harden` | Retrofit the SDLC onto an existing non-SDLC repo. |
 | `/retrospective` | Two modes: **feature retro** (this change) and **session retro** (what went wrong → how to improve the SDLC). |
 | `/resume` | Continue in-flight work from `SESSION_STATE.md`. |
+| `/sdlc-help` | **Guide** — explain how the SDLC works, or map a how-to question to the right command/phase. Advisory and read-only. |
 
 ## Key decisions
 

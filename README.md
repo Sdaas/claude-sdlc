@@ -60,6 +60,7 @@ The SDLC exposes a small set of commands (installed into `~/.claude/commands`):
 | `/harden` | Retrofit the SDLC onto an existing repo. |
 | `/retrospective` | Feature retro, or a session retro to improve the SDLC. |
 | `/resume` | Continue in-flight work. |
+| `/sdlc-help` | Explain how the SDLC works, or answer a specific how-to question. |
 
 Work is tracked as **GitHub Issues** (the backlog). Trivial changes go straight
 to `main`; everything else gets its own branch. Every implementation ends with a
