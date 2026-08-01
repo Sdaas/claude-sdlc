@@ -61,6 +61,7 @@ The orchestrator proposes a tier at CLASSIFY; the human confirms or overrides.
 | `/retrospective` | Two modes: **feature retro** (this change) and **session retro** (what went wrong → how to improve the SDLC). |
 | `/resume` | Continue in-flight work from `SESSION_STATE.md`. |
 | `/sdlc-help` | **Guide** — explain how the SDLC works, or map a how-to question to the right command/phase. Advisory and read-only. |
+| `/sdlc-feedback` | **Feedback intake** — turn a reporter's message into a well-formed GitHub issue (prompts for detail if thin; degrades gracefully on missing auth/permissions). Files-and-points only. |
 
 ## Key decisions
 
