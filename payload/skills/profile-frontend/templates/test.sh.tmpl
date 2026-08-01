@@ -1,0 +1,59 @@
+#!/usr/bin/env bash
+#
+# test.sh — single test entrypoint for {{NAME}}.
+# Type-checks (tsc), checks formatting (prettier), then runs the vitest suite.
+# Non-zero on any failure. This is what the pre-push hook and CI both call.
+#
+# Dev dependency: Node.js + npm (https://nodejs.org/).
+
+set -uo pipefail
+
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$REPO_ROOT" || exit 1
+
+if ! command -v npm >/dev/null 2>&1; then
+	echo "ERROR: npm not found (dev dependency). Install Node.js:" >&2
+	echo "  https://nodejs.org/       # includes npm" >&2
+	echo "  brew install node         # macOS" >&2
+	exit 1
+fi
+
+FAILED=0
+
+echo "==> npm install"
+if ! npm install --silent; then
+	echo "    npm install FAILED"
+	exit 1
+fi
+
+echo "==> tsc (type-check)"
+if npm run --silent typecheck; then
+	echo "    clean"
+else
+	echo "    tsc FAILED"
+	FAILED=1
+fi
+
+echo "==> prettier (format check)"
+if npm run --silent format:check; then
+	echo "    clean"
+else
+	echo "    format FAILED (run: npm run format)"
+	FAILED=1
+fi
+
+echo "==> vitest"
+if npm run --silent test; then
+	echo "    tests passed"
+else
+	echo "    tests FAILED"
+	FAILED=1
+fi
+
+echo
+if [[ "$FAILED" -eq 0 ]]; then
+	echo "ALL TESTS PASSED"
+else
+	echo "TESTS FAILED"
+fi
+exit "$FAILED"

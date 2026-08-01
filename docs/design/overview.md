@@ -124,10 +124,16 @@ The orchestrator proposes a tier at CLASSIFY; the human confirms or overrides.
 - **shell** — bats (cross-shell bash+zsh), shellcheck, `bin/<tool>`, brew Formula.
 - **python** — `uv` + hatchling, `src/<pkg>` layout, stdlib argparse CLI, `ruff`
   (lint+format), pytest, `requires-python >= 3.11`. `test.sh` guards on `uv`.
+- **frontend** — Vite + vanilla TypeScript (framework-neutral, no React), npm,
+  Vitest, `tsc --noEmit` + `prettier --check`. `test.sh` guards on node/npm.
+  Kept framework-neutral so the profile is a reusable base, not a commitment to
+  React for every front-end project.
 
 ## Out of scope (for now)
 
 - Model/token-usage optimization (deferred).
-- Rich SQL and front-end profiles (lightweight first pass; improved next iteration).
+- Rich SQL profile, and a richer front-end profile (React/component testing,
+  ESLint, publish flow) — the current front-end profile is a lightweight first
+  pass, improved next iteration.
 - Migrating the existing global shell skills into `profile-shell` (kept working
   standalone until `profile-shell` is proven).

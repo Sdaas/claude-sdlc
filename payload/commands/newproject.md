@@ -35,8 +35,9 @@ Also capture (recorded into `design/overview.md` at Step 4):
 Note to the developer: detailed per-feature requirements come later via
 `/feature`; this interview is only to stand up the repo.
 
-Only the **shell** profile is fully implemented today. If another profile is
-chosen, say so — the core skeleton is generated but stack files are not yet.
+The **shell**, **python**, and **frontend** profiles are fully implemented
+today. If another profile (e.g. **sql**) is chosen, say so — the core skeleton
+is generated but its stack files are not yet.
 
 ## Step 2 — Confirm
 
