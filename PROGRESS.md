@@ -18,10 +18,15 @@ holds the roadmap + dependency order; `docs/design/` holds the architecture.
 - **Self-hosting is LIVE.** Applied to `~/.claude`; `/feature` + `/newproject` are
   live commands. **#13 python + #17 frontend profiles were built *by* `/feature`**
   end-to-end (graduation criterion #4 met twice). Closed #2, #12, #13, #17.
+- **Meta/help commands added.** #34 `/sdlc-help` (explain the SDLC + answer
+  how-to questions; advisory/read-only) and #35 `/sdlc-feedback` (message →
+  well-formed GitHub issue; graceful degradation for non-author reporters) both
+  built by `/feature` and merged (PRs #36, #38). Closed #27 as a dup of #34.
+  Filed #37 (add a `gh auth status` check to `setup.sh`), surfaced while building #35.
 - **Phase 2 remaining:** none.
 - **NEXT ACTION:** proof-run `/discovery` on a real concept (retro cuts #32 v2);
   then remaining Phase 3: #14 /bugfix, #15 deploy(brew), #16 profile-sql,
-  #18 /retrospective, #19 /resume.
+  #18 /retrospective, #19 /resume. Also open: #37 (setup.sh gh-auth check).
 - **Graduation:** need ~3–4 clean `/feature` runs + no process gaps in retros
   before using the SDLC on OTHER repos (see memory `sdlc-self-hosting`).
 - **Process reminder:** never commit/push before human review + approval (rule #10).
@@ -36,6 +41,18 @@ listed order. Update this file's NEXT ACTION to the active issue #.
 ## Session log
 
 Newest first. One short entry per working session.
+
+### 2026-08-01 — Session 1 (cont. 8)
+- **Built #34 `/sdlc-help` and #35 `/sdlc-feedback`** via `/feature` (prose path).
+  `/sdlc-help`: advisory/read-only guide — no-arg overview + question→command
+  mapping; reads installed commands/skills live so help never drifts.
+  `/sdlc-feedback`: message → confirmed GitHub issue; prompts when thin; live
+  `gh label list`; graceful-degradation ladder for non-author reporters (auth
+  preflight + label/create permission fallbacks that never lose feedback).
+  Both wired into README + overview tables. Merged (PRs #36, #38). Closed #27
+  (dup of #34). Filed #37 (setup.sh should verify `gh auth status`, not just
+  that `gh` is installed) — surfaced mid-#35.
+- Next: proof-run `/discovery`; #37; remaining Phase 3.
 
 ### 2026-08-01 — Session 1 (cont. 7)
 - **Built #32: `/discovery` + `/architecture` upstream phase** (hand-built, prose
