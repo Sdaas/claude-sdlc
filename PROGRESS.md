@@ -9,15 +9,14 @@ holds the roadmap + dependency order; `docs/design/` holds the architecture.
 
 ## ▶ Current status
 
-- **Phase:** 2 (`/feature` + first self-hosted feature) — **nearly done**
+- **Phase:** 2 nearly done; **Phase 3 underway** (#17 frontend profile shipped).
 - **Self-hosting is LIVE.** Applied to `~/.claude`; `/feature` + `/newproject` are
-  live commands. **#13 python profile was built *by* `/feature`** end-to-end
-  (graduation criterion #4 met once). Closed #2, #12, #13.
+  live commands. **#13 python + #17 frontend profiles were built *by* `/feature`**
+  end-to-end (graduation criterion #4 met twice). Closed #2, #12, #13, #17.
 - **Phase 2 remaining:** #8 (README Setup + deps script — the only Phase-2 item
   with no dependency).
-- **NEXT ACTION:** #8, then Phase 3 (all blocked on #12, now closed): #14 /bugfix,
-  #15 deploy(brew), #16 profile-sql, #17 profile-frontend, #18 /retrospective,
-  #19 /resume.
+- **NEXT ACTION:** #8, then remaining Phase 3 (all blocked on #12, now closed):
+  #14 /bugfix, #15 deploy(brew), #16 profile-sql, #18 /retrospective, #19 /resume.
 - **Graduation:** need ~3–4 clean `/feature` runs + no process gaps in retros
   before using the SDLC on OTHER repos (see memory `sdlc-self-hosting`).
 - **Process reminder:** never commit/push before human review + approval (rule #10).
@@ -32,6 +31,15 @@ listed order. Update this file's NEXT ACTION to the active issue #.
 ## Session log
 
 Newest first. One short entry per working session.
+
+### 2026-08-01 — Session 1 (cont. 5)
+- **Used /feature to build #17 frontend profile** end-to-end (Vite + vanilla TS,
+  npm, vitest, tsc + prettier; framework-neutral, no React). Live verify caught a
+  real bug (prettier sweeping the core docs) → fixed with a `.prettierignore`.
+  Merged (PR #28). Suite 83 assertions. Second clean self-hosted `/feature` run.
+- Note: `gh pr merge`/PR-create are gated by the harness classifier — human ran
+  the merge; the PR body needed `--body-file` to pass.
+- Next: #8, then remaining Phase 3.
 
 ### 2026-07-31 — Session 1 (cont. 4)
 - Built #2 sdlc-common SKILL.md + #12 /feature command (hand-built), merged (PR #23).
