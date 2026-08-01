@@ -10,12 +10,18 @@ holds the roadmap + dependency order; `docs/design/` holds the architecture.
 ## ▶ Current status
 
 - **Phase:** 2 done (#8 setup docs shipped); **Phase 3 underway** (#17 frontend profile shipped).
+- **Upstream phase added.** #32 shipped `/discovery` + `/architecture` (new
+  `sdlc-discovery` skill + templates + two command gate-walkers) — the phase that
+  turns a fuzzy concept into gated, versioned artifacts (concept → use cases →
+  arch + ADRs → traced/sequenced feature backlog) feeding `/feature`. Merged
+  (PR #33). **v1 to be proven by the first real `/discovery` run** (retro → v2).
 - **Self-hosting is LIVE.** Applied to `~/.claude`; `/feature` + `/newproject` are
   live commands. **#13 python + #17 frontend profiles were built *by* `/feature`**
   end-to-end (graduation criterion #4 met twice). Closed #2, #12, #13, #17.
 - **Phase 2 remaining:** none.
-- **NEXT ACTION:** remaining Phase 3 (all blocked on #12, now closed):
-  #14 /bugfix, #15 deploy(brew), #16 profile-sql, #18 /retrospective, #19 /resume.
+- **NEXT ACTION:** proof-run `/discovery` on a real concept (retro cuts #32 v2);
+  then remaining Phase 3: #14 /bugfix, #15 deploy(brew), #16 profile-sql,
+  #18 /retrospective, #19 /resume.
 - **Graduation:** need ~3–4 clean `/feature` runs + no process gaps in retros
   before using the SDLC on OTHER repos (see memory `sdlc-self-hosting`).
 - **Process reminder:** never commit/push before human review + approval (rule #10).
@@ -30,6 +36,17 @@ listed order. Update this file's NEXT ACTION to the active issue #.
 ## Session log
 
 Newest first. One short entry per working session.
+
+### 2026-08-01 — Session 1 (cont. 7)
+- **Built #32: `/discovery` + `/architecture` upstream phase** (hand-built, prose
+  path). New `sdlc-discovery` skill (gate defs, human-prose-vs-AI-distillation
+  provenance rule, traceability rule, both gate sequences) + 4 templates (concept,
+  use-cases, ADR decision, feature backlog) + two thin command gate-walkers +
+  `docs/design/discovery-architecture.md` + overview updates. Motivated by a real
+  256-page ChatGPT product-build thread whose failure mode was big-picture-in-
+  scrollback + reactive architecture + vibes validation. Tests green (145);
+  apply.sh dry-run registers all 7 files. Merged (PR #33).
+- Next: proof-run `/discovery` on a real concept, then retro → v2.
 
 ### 2026-08-01 — Session 1 (cont. 6)
 - **Used /feature to build #8** (README Setup docs + `setup.sh` dep checker/installer).
