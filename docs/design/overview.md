@@ -20,6 +20,7 @@ with no per-repo setup.
 
 ```
 LAYER 1 · ENTRY COMMANDS (global, ~/.claude/commands)
+   /discovery  /architecture   ← upstream: concept → use cases → arch → backlog
    /newproject  /feature  /bugfix  /harden  /retrospective  /resume
    → classify work, pick a TIER, walk the gates
         │ drives
@@ -51,6 +52,8 @@ The orchestrator proposes a tier at CLASSIFY; the human confirms or overrides.
 
 | Command | Purpose |
 |---|---|
+| `/discovery` | **Upstream (what)** — interview a fuzzy concept into gated artifacts: concept brief + use-case catalog. Runs before a repo exists. |
+| `/architecture` | **Upstream (how)** — capability map + C4-ish diagram + decision records (ADRs) + a traced, sequenced **feature backlog** that feeds `/feature`. |
 | `/newproject` | **Greenfield** — interview → scaffold a new repo (README, `design/`, `test.sh`, `release.sh`, hooks, CI, git init). Interview picks the stack profile. |
 | `/feature` | Add a capability to an existing SDLC repo. |
 | `/bugfix` | Fix a bug (reproduce-first: failing test before the fix). |
