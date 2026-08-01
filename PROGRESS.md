@@ -9,13 +9,12 @@ holds the roadmap + dependency order; `docs/design/` holds the architecture.
 
 ## ▶ Current status
 
-- **Phase:** 2 nearly done; **Phase 3 underway** (#17 frontend profile shipped).
+- **Phase:** 2 done (#8 setup docs shipped); **Phase 3 underway** (#17 frontend profile shipped).
 - **Self-hosting is LIVE.** Applied to `~/.claude`; `/feature` + `/newproject` are
   live commands. **#13 python + #17 frontend profiles were built *by* `/feature`**
   end-to-end (graduation criterion #4 met twice). Closed #2, #12, #13, #17.
-- **Phase 2 remaining:** #8 (README Setup + deps script — the only Phase-2 item
-  with no dependency).
-- **NEXT ACTION:** #8, then remaining Phase 3 (all blocked on #12, now closed):
+- **Phase 2 remaining:** none.
+- **NEXT ACTION:** remaining Phase 3 (all blocked on #12, now closed):
   #14 /bugfix, #15 deploy(brew), #16 profile-sql, #18 /retrospective, #19 /resume.
 - **Graduation:** need ~3–4 clean `/feature` runs + no process gaps in retros
   before using the SDLC on OTHER repos (see memory `sdlc-self-hosting`).
@@ -31,6 +30,15 @@ listed order. Update this file's NEXT ACTION to the active issue #.
 ## Session log
 
 Newest first. One short entry per working session.
+
+### 2026-08-01 — Session 1 (cont. 6)
+- **Used /feature to build #8** (README Setup docs + `setup.sh` dep checker/installer).
+  macOS/Homebrew, check + consent (`--yes` for CI), non-mac/no-brew → manual +
+  non-zero. Propagated into the `/newproject` scaffold: core base + per-profile
+  `setup.sh.tmpl` (shell +shellcheck/bats, python +uv, frontend +node), same
+  override pattern as `test.sh`/`ci.yml`. Test-first; suites now 27+100+18 = 145
+  assertions. Review caught a false-positive `--help` test (sed-in-error-text) → hardened.
+- Phase 2 complete. Third clean self-hosted `/feature` run.
 
 ### 2026-08-01 — Session 1 (cont. 5)
 - **Used /feature to build #17 frontend profile** end-to-end (Vite + vanilla TS,
