@@ -20,8 +20,8 @@ with no per-repo setup.
 
 ```
 LAYER 1 · ENTRY COMMANDS (global, ~/.claude/commands)
-   /discovery  /architecture   ← upstream: concept → use cases → arch → backlog
-   /newproject  /feature  /bugfix  /harden  /retrospective  /sdlc-resume
+   /sdlc-discovery  /sdlc-architecture   ← upstream: concept → use cases → arch → backlog
+   /sdlc-newproject  /sdlc-feature  /sdlc-bugfix  /sdlc-harden  /sdlc-retrospective  /sdlc-resume
    → classify work, pick a TIER, walk the gates
         │ drives
 LAYER 2 · GATES (reusable, stack-agnostic skills)
@@ -52,13 +52,13 @@ The orchestrator proposes a tier at CLASSIFY; the human confirms or overrides.
 
 | Command | Purpose |
 |---|---|
-| `/discovery` | **Upstream (what)** — interview a fuzzy concept into gated artifacts: concept brief + use-case catalog. Runs before a repo exists. |
-| `/architecture` | **Upstream (how)** — capability map + C4-ish diagram + decision records (ADRs) + a traced, sequenced **feature backlog** that feeds `/feature`. |
-| `/newproject` | **Greenfield** — interview → scaffold a new repo (README, `design/`, `test.sh`, `release.sh`, hooks, CI, git init). Interview picks the stack profile. |
-| `/feature` | Add a capability to an existing SDLC repo. |
-| `/bugfix` | Fix a bug (reproduce-first: failing test before the fix). |
-| `/harden` | Retrofit the SDLC onto an existing non-SDLC repo. |
-| `/retrospective` | Two modes: **feature retro** (this change) and **session retro** (what went wrong → how to improve the SDLC). |
+| `/sdlc-discovery` | **Upstream (what)** — interview a fuzzy concept into gated artifacts: concept brief + use-case catalog. Runs before a repo exists. |
+| `/sdlc-architecture` | **Upstream (how)** — capability map + C4-ish diagram + decision records (ADRs) + a traced, sequenced **feature backlog** that feeds `/sdlc-feature`. |
+| `/sdlc-newproject` | **Greenfield** — interview → scaffold a new repo (README, `design/`, `test.sh`, `release.sh`, hooks, CI, git init). Interview picks the stack profile. |
+| `/sdlc-feature` | Add a capability to an existing SDLC repo. |
+| `/sdlc-bugfix` | Fix a bug (reproduce-first: failing test before the fix). |
+| `/sdlc-harden` | Retrofit the SDLC onto an existing non-SDLC repo. |
+| `/sdlc-retrospective` | Two modes: **feature retro** (this change) and **session retro** (what went wrong → how to improve the SDLC). |
 | `/sdlc-resume` | Continue in-flight work from `SESSION_STATE.md` (reconciled with git + issues + `PROGRESS.md`). Named `/sdlc-resume` to avoid colliding with Claude Code's built-in `/resume`. |
 | `/sdlc-help` | **Guide** — explain how the SDLC works, or map a how-to question to the right command/phase. Advisory and read-only. |
 | `/sdlc-feedback` | **Feedback intake** — turn a reporter's message into a well-formed GitHub issue (prompts for detail if thin; degrades gracefully on missing auth/permissions). Files-and-points only. |
@@ -105,7 +105,7 @@ The orchestrator proposes a tier at CLASSIFY; the human confirms or overrides.
 8. **Done = green tests AND observed real behavior (#42).** Hermetic tests are
    necessary, not sufficient — a red written against a **mock** goes green when
    the mock is satisfied, proving only the mock. A first-class **VERIFY** gate in
-   `/feature` and `/bugfix` (after IMPLEMENT, before code review) drives the real
+   `/sdlc-feature` and `/sdlc-bugfix` (after IMPLEMENT, before code review) drives the real
    user-facing flow and exercises **every external boundary un-mocked once**.
    Mocking a boundary **obligates ≥1 non-mocked** (real/contract) test there,
    kept **opt-in/skippable** so PR CI needs no secrets/GPUs; Done is enforced by
@@ -129,14 +129,24 @@ The orchestrator proposes a tier at CLASSIFY; the human confirms or overrides.
    python CI adds a **clean-install** job (`uv sync --no-dev` + run the tool)
    that fails loudly on an **undeclared runtime dependency** (the medical-ocr#7
    `Pillow` case). No integration job ships in CI (honest: it can't provide the
-   boundary). Cross-profile, `/newproject` scaffolds a "fresh clone → run once"
+   boundary). Cross-profile, `/sdlc-newproject` scaffolds a "fresh clone → run once"
    path and adds "run the tool once" to the Definition of Done. Frontend gets
    the same lanes in a later issue.
+10. **Every SDLC command is prefixed `sdlc-` (#45).** Claude Code and
+    third-party tools keep adding built-in/global commands and skills; an
+    unprefixed name (`/help`, `/verify`, …) collides sooner or later — `/help`
+    forced the rename to `/sdlc-help` early on, then `/verify` collided too. So
+    every SDLC-owned command was renamed uniformly: `/sdlc-discovery`,
+    `/sdlc-architecture`, `/sdlc-newproject`, `/sdlc-feature`, `/sdlc-bugfix`,
+    `/sdlc-retrospective` (`/sdlc-resume`, `/sdlc-help`, `/sdlc-feedback` were
+    already compliant). The rule now lives once, durably, in `sdlc-common` §8,
+    so any future command is named `sdlc-<name>` from its first draft rather
+    than renamed after a collision.
 
 ## Backlog, branching, CI, and review guide
 
 6. **GitHub Issues are the backlog.** Feature requests and bug reports live as
-   GitHub issues. `/feature` and `/bugfix` link to (or create) an issue at
+   GitHub issues. `/sdlc-feature` and `/sdlc-bugfix` link to (or create) an issue at
    CLASSIFY; the issue number is the preferred artifact slug. The issue is the
    single source of truth for "what's queued."
 7. **Branching policy.** **Trivial** features/bugs (Quick tier) are committed

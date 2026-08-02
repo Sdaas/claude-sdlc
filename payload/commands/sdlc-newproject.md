@@ -1,6 +1,7 @@
-# /newproject — start a new SDLC repo
+# /sdlc-newproject — start a new SDLC repo
 
-Triggered by `/newproject` (or a natural request to "start a new project/repo").
+Triggered by `/sdlc-newproject` (or a natural request to "start a new
+project/repo").
 
 Greenfield workflow: interview the developer, scaffold a repo that already
 follows this SDLC, then initialize git and (optionally) create the GitHub repo.
@@ -38,7 +39,7 @@ Also capture (recorded into `design/overview.md` at Step 4):
 8. **Key design & usability considerations** — anything shaping the design up front.
 
 Note to the developer: detailed per-feature requirements come later via
-`/feature`; this interview is only to stand up the repo.
+`/sdlc-feature`; this interview is only to stand up the repo.
 
 The **shell**, **python**, and **frontend** profiles are fully implemented
 today. If another profile (e.g. **sql**) is chosen, say so — the core skeleton
@@ -119,7 +120,7 @@ real-boundary tests) before the push completes.
 
 - Offer to create initial GitHub Issues for the first planned capabilities
   (the backlog lives in Issues).
-- Tell the developer: **run `/feature "…"` to build the first capability.**
+- Tell the developer: **run `/sdlc-feature "…"` to build the first capability.**
 
 ---
 

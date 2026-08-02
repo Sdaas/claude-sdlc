@@ -1,6 +1,6 @@
 # Concept — <product name>
 
-> Produced by `/discovery`. Curated, not exhaustive. Keep it to one page.
+> Produced by `/sdlc-discovery`. Curated, not exhaustive. Keep it to one page.
 > `In your words:` blocks are the human's verbatim ground truth — never
 > overwrite them. Everything else is AI distillation, subject to approval.
 

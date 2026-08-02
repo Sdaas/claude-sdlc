@@ -1,10 +1,10 @@
-# `/feature` — Design
+# `/sdlc-feature` — Design
 
 Add a capability to an **existing** SDLC repo through the gated, human-in-the-loop
 workflow. Tracks Issues #2 (sdlc-common), #3 (orchestrator), #4 (gates).
 
 This is the component we hand-build, then **self-host**: once applied, we use
-`/feature` to build the rest of the SDLC (this repo only) until it graduates.
+`/sdlc-feature` to build the rest of the SDLC (this repo only) until it graduates.
 
 ## Two paths (both first-class from day one)
 
@@ -74,16 +74,16 @@ reason — only when there is no runtime surface to drive.
 1. **`payload/skills/sdlc-common/SKILL.md`** (prose) — the shared conventions the
    command leans on: tier definitions, the two paths, the governance matrix,
    branching/backlog rules, and rule #10. Kept lean.
-2. **`payload/commands/feature.md`** (prose) — the command that loads
+2. **`payload/commands/sdlc-feature.md`** (prose) — the command that loads
    `sdlc-common` and walks the gate sequence above.
 
 Deferred: a standalone `sdlc-orchestrator` skill (v1 embeds the sequence in the
-command; factor it out once `/bugfix`/`/harden` share it); Full-tier
+command; factor it out once `/sdlc-bugfix`/`/sdlc-harden` share it); Full-tier
 design-review/security-review kept light for now.
 
-## How we validate `/feature` v1
+## How we validate `/sdlc-feature` v1
 
-Because `/feature` is mostly prose, we validate it by **using it** to build the
+Because `/sdlc-feature` is mostly prose, we validate it by **using it** to build the
 **python profile** (a CODE-path feature that extends the already-tested
 `scaffold.sh`). A clean end-to-end run — interview → design → TDD → review →
 commit, no manual rescue — is the shakedown (and graduation criterion #4).

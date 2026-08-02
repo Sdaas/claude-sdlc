@@ -1,9 +1,10 @@
 # Feature Backlog — <product name>
 
-> Produced by `/architecture` — its terminal artifact. Each row is a **feature**
-> sized for one `/feature` run, **traced** to the use cases it satisfies and
-> **sequenced** by dependency + deferral discipline. This is what becomes GitHub
-> Issues (`Depends on: #N`) and what `/feature` builds one at a time.
+> Produced by `/sdlc-architecture` — its terminal artifact. Each row is a
+> **feature** sized for one `/sdlc-feature` run, **traced** to the use cases it
+> satisfies and **sequenced** by dependency + deferral discipline. This is what
+> becomes GitHub Issues (`Depends on: #N`) and what `/sdlc-feature` builds one
+> at a time.
 >
 > Gate: every feature traces to use-case IDs (no floating work); the sequence
 > respects dependencies and puts core before peripheral.
@@ -38,4 +39,4 @@ that used to be vibes ("do 2B before 2C, brother") — make the logic explicit.>
 
 - [ ] Issues created for P0 features with `Depends on` lines
 - [ ] `PROGRESS.md` / board updated with the new backlog
-- Next: `/feature` picks the earliest unblocked P0.
+- Next: `/sdlc-feature` picks the earliest unblocked P0.

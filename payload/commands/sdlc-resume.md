@@ -14,8 +14,8 @@ consumes that state; `sdlc-common` defines what it means.
 **Read-only until you approve (hard rule).** `/sdlc-resume` orients and proposes.
 It reads state, reconciles it with reality, and recommends the next step — it
 does **not** edit files, create branches, or run a gate on its own. Once you
-approve, it hands off to the owning command (`/feature`, `/bugfix`, …), which
-runs its own gates.
+approve, it hands off to the owning command (`/sdlc-feature`, `/sdlc-bugfix`,
+…), which runs its own gates.
 
 ---
 
@@ -29,7 +29,7 @@ Gather, in this order, whatever exists:
 2. **Git reality** (when the workspace is a git repo) — `git status` (branch +
    uncommitted changes), `git log` (recent commits), and the current branch name
    (a `feature/<n>` or `fix/<n>` branch names the in-flight issue and path). An
-   upstream `/discovery` runs before a repo exists — there, lean on
+   upstream `/sdlc-discovery` runs before a repo exists — there, lean on
    `SESSION_STATE.md` + the `discovery/` artifacts instead.
 3. **Backlog** — `gh issue list` (open issues) and the in-flight issue
    (`gh issue view <n>`), respecting `Depends on: #N`.
@@ -42,7 +42,7 @@ Cross-check the sources; **surface any discrepancy** rather than trusting one
 blindly. For example: `SESSION_STATE.md` says Gate 8 but the branch has no
 commits; the state names `feature/12` but you're on `main`; the issue is already
 closed; uncommitted changes exist with no recorded state. State what you found
-in plain terms: *"You were mid-`/feature` on #19 (`feature/19`), stopped at
+in plain terms: *"You were mid-`/sdlc-feature` on #19 (`feature/19`), stopped at
 Gate 4 (IMPLEMENT); the branch has uncommitted changes in `payload/commands/`."*
 
 ## Step 3 — Propose the next step (wait for approval)
@@ -55,8 +55,8 @@ Based on the reconciled picture, recommend **one** clear path:
   human-review gate re-approve anything mid-flight.
 - **Start the next item** — if nothing is in flight: propose the next backlog
   item using the selection rule (earliest open milestone → issue whose
-  `Depends on` are all closed → `PLAN.md` order), i.e. `/feature <n>` /
-  `/bugfix <n>`.
+  `Depends on` are all closed → `PLAN.md` order), i.e. `/sdlc-feature <n>` /
+  `/sdlc-bugfix <n>`.
 
 Present the plan and **stop**. Do not launch the command — let the developer
 invoke it (or say "go") so the choosing happens *with* them.

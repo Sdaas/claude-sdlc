@@ -1,7 +1,7 @@
 # `/sdlc-resume` — Design
 
 Continue in-flight SDLC work across sessions. Tracks Issue #19. Built by
-`/feature` (prose path). Two halves: **(A)** the `/sdlc-resume` command that
+`/sdlc-feature` (prose path). Two halves: **(A)** the `/sdlc-resume` command that
 orients and hands off, and **(B)** a `SESSION_STATE.md` checkpoint that the
 gate-walking commands write so resume can be precise.
 
@@ -28,7 +28,7 @@ cursor = *where the project is between commands*. `/sdlc-resume` reads both.
 ## `SESSION_STATE.md` schema
 
 ```
-command: /feature      issue: 19     tier: Standard    path: prose
+command: /sdlc-feature issue: 19     tier: Standard    path: prose
 branch: feature/19     gate: 4 (IMPLEMENT)             updated: <ISO-8601>
 ## Context — decisions so far / what's done / what's next
 - <interview summary, design decisions, WIP, the immediate next action>
@@ -41,10 +41,10 @@ a one-line pointer to that rule rather than re-specifying the mechanism (DRY).
 
 ## Which commands checkpoint
 
-The five gate-walkers: `/feature`, `/bugfix`, `/newproject` (repo-root state) and
-the upstream `/discovery`, `/architecture` (state in the product **workspace**
-dir, since a repo may not exist yet). `/sdlc-help` and `/sdlc-feedback` are not
-gated workflows and do not checkpoint.
+The five gate-walkers: `/sdlc-feature`, `/sdlc-bugfix`, `/sdlc-newproject`
+(repo-root state) and the upstream `/sdlc-discovery`, `/sdlc-architecture`
+(state in the product **workspace** dir, since a repo may not exist yet).
+`/sdlc-help` and `/sdlc-feedback` are not gated workflows and do not checkpoint.
 
 ## `/sdlc-resume` behavior
 

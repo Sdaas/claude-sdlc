@@ -22,13 +22,13 @@ readable DAG). It is **not** a task checklist.
 `apply.sh` (versioned installer) + tests, `test.sh`/`release.sh`, pre-push + CI,
 README, design docs. Repo pushed; CI green.
 
-## Phase 1 — `/newproject` slice ✅ done
+## Phase 1 — `/sdlc-newproject` slice ✅ done
 
 Core scaffolder (`scaffold.sh` + templates) + shell profile (bats, cross-shell,
-brew) + `/newproject` command. Proven end-to-end; applied to `~/.claude` (v0.1.0).
-Closed #1, #5, #6.
+brew) + `/sdlc-newproject` command. Proven end-to-end; applied to `~/.claude`
+(v0.1.0). Closed #1, #5, #6.
 
-## Phase 2 — `/feature` + first self-hosted feature ([milestone](https://github.com/Sdaas/claude-sdlc/milestones))
+## Phase 2 — `/sdlc-feature` + first self-hosted feature ([milestone](https://github.com/Sdaas/claude-sdlc/milestones))
 
 Rationale: build the tool that lets the SDLC build itself, then prove it by using
 it. Self-hosted on **this repo only** until it graduates (see the self-hosting
@@ -37,23 +37,23 @@ strategy in memory / design docs).
 Sequence:
 ```
 #2  sdlc-common SKILL.md  (tiers, paths, governance, conventions)
-      → #12 /feature command (embedded gates; code + prose paths)
-            → #13 python profile   ← FIRST feature built *by* /feature (shakedown)
+      → #12 /sdlc-feature command (embedded gates; code + prose paths)
+            → #13 python profile   ← FIRST feature built *by* /sdlc-feature (shakedown)
 #8  README Setup + deps script      (parallel — no hard dependency)
 ```
 
 ## Phase 3 — more commands, profiles, deploy
 
-All depend on **#12** (`/feature`). Parallelizable once it exists:
+All depend on **#12** (`/sdlc-feature`). Parallelizable once it exists:
 ```
-#14 /bugfix   #15 deploy(brew)   #16 profile-sql   #17 profile-frontend
-#18 /retrospective   #19 /sdlc-resume
+#14 /sdlc-bugfix   #15 deploy(brew)   #16 profile-sql   #17 profile-frontend
+#18 /sdlc-retrospective   #19 /sdlc-resume
 ```
 
 ## Phase 4 — refactor, adopt, migrate
 
 ```
-#20 /harden               (depends on #12)
+#20 /sdlc-harden           (depends on #12)
 #11 extract orchestrator  (depends on #14, #20 — only once multiple callers exist)
 #4  extract gate skills   (tech-debt; after the embedded version proves out)
 #21 migrate global shell skills into profile-shell

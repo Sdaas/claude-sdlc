@@ -18,7 +18,7 @@ commands change.
 **Read-only (hard rule).** `/sdlc-help` is advisory. It explains the process and
 names the command to run — it **never** edits files, creates branches, runs a
 workflow gate, or otherwise changes the repo. When the answer is "run
-`/feature`", say so and stop; let the human invoke it.
+`/sdlc-feature`", say so and stop; let the human invoke it.
 
 ---
 
@@ -26,10 +26,10 @@ workflow gate, or otherwise changes the repo. When the answer is "run
 
 Give a concise orientation, drawn from the installed commands and skills:
 
-1. **The phase flow** — the upstream `/discovery → /architecture` (concept → use
-   cases → architecture → traced, sequenced backlog), then the build commands
-   `/newproject`, `/feature`, `/bugfix`, `/harden`, closing with
-   `/retrospective` and `/sdlc-resume`.
+1. **The phase flow** — the upstream `/sdlc-discovery → /sdlc-architecture`
+   (concept → use cases → architecture → traced, sequenced backlog), then the
+   build commands `/sdlc-newproject`, `/sdlc-feature`, `/sdlc-bugfix`,
+   `/sdlc-harden`, closing with `/sdlc-retrospective` and `/sdlc-resume`.
 2. **Classify every change** — tier (Quick / Standard / Full) and path
    (code / prose), confirmed with the human before any work (`sdlc-common` §1–3).
 3. **The gate sequence** — interview → design → implement → code-review →
@@ -48,16 +48,16 @@ End by inviting a specific question: `/sdlc-help "…"`.
 ## Mode 2 — a question: map it to the right command / phase
 
 1. **Interpret** the question and map it to the phase or command that owns it —
-   e.g. "add a feature" → `/feature`; "fix a bug" → `/bugfix`; "start a new
-   project" → `/newproject`; "figure out what to build" → `/discovery`; "revise
-   the architecture" → re-run `/architecture` on the existing artifacts;
-   "retrofit an existing repo" → `/harden`.
+   e.g. "add a feature" → `/sdlc-feature`; "fix a bug" → `/sdlc-bugfix`; "start
+   a new project" → `/sdlc-newproject`; "figure out what to build" →
+   `/sdlc-discovery`; "revise the architecture" → re-run `/sdlc-architecture` on
+   the existing artifacts; "retrofit an existing repo" → `/sdlc-harden`.
 2. **Explain the concrete steps** the human takes, grounded in the owning
    skill's gates (`sdlc-common` / `sdlc-discovery`). If they are mid-workflow and
    want to change an earlier decision, explain how to go back — usually re-enter
    the earlier command/gate and let its human-review gate re-approve the change.
-3. **Point at the command to run** (e.g. "run `/feature 34`") and stop. Do not
-   launch it.
+3. **Point at the command to run** (e.g. "run `/sdlc-feature 34`") and stop. Do
+   not launch it.
 4. If the question is ambiguous, ask a clarifying question before answering —
    do not guess what they meant.
 

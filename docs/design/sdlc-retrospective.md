@@ -1,19 +1,19 @@
-# Design — `/retrospective`
+# Design — `/sdlc-retrospective`
 
 A two-mode reflection command. It runs a short, gated retro and writes one
 durable markdown doc into the **working repo's** `docs/retrospectives/`. It is
 advisory: it reflects, writes, and points — it never branches, fixes, or commits.
 
-Depends on: #12 (`/feature`). Tracked by #18.
+Depends on: #12 (`/sdlc-feature`). Tracked by #18.
 
 ## Two modes
 
 | Mode | Lens | Doc |
 |---|---|---|
-| **feature** | The change just shipped: outcome vs. acceptance criteria, what went well, friction, lessons. Typically invoked at Full-tier close-out from `/feature` or `/bugfix`, or ad hoc. | `docs/retrospectives/YYYY-MM-DD-feature-<issue>.md` |
+| **feature** | The change just shipped: outcome vs. acceptance criteria, what went well, friction, lessons. Typically invoked at Full-tier close-out from `/sdlc-feature` or `/sdlc-bugfix`, or ad hoc. | `docs/retrospectives/YYYY-MM-DD-feature-<issue>.md` |
 | **session** | The work *session*, with an SDLC-improvement lens: what went wrong → which gate/command caused friction → how to improve the workflow. | `docs/retrospectives/YYYY-MM-DD-session.md` |
 
-Mode is chosen by an explicit arg (`/retrospective feature` / `/retrospective
+Mode is chosen by an explicit arg (`/sdlc-retrospective feature` / `/sdlc-retrospective
 session`). With no arg, the command infers from context
 (`SESSION_STATE.md` / recent close-out) and **confirms** before proceeding.
 

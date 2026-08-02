@@ -1,10 +1,10 @@
-# `/newproject` — Design
+# `/sdlc-newproject` — Design
 
 Greenfield workflow: interview the developer, then scaffold a new repo that
 already follows this SDLC (README, `design/`, tests, hooks, CI). Tracks
 Issues #1 and #6.
 
-## Interview (asked by the `/newproject` command)
+## Interview (asked by the `/sdlc-newproject` command)
 
 Core (always):
 1. **Name & purpose** — repo name + one sentence.
@@ -18,11 +18,11 @@ Also (recorded into `design/overview.md`):
 7. **Known constraints** — security / performance / scale, if any.
 8. **Key design & usability considerations** — anything shaping the design up front.
 
-Product requirements per feature are gathered later by `/feature`, not here.
+Product requirements per feature are gathered later by `/sdlc-feature`, not here.
 
 ## Scaffolder architecture
 
-To stay testable and script-driven, `/newproject` does **not** free-hand files.
+To stay testable and script-driven, `/sdlc-newproject` does **not** free-hand files.
 It runs a template-based scaffolder that ships in `payload/` (so a global install
 can scaffold anywhere):
 
@@ -74,7 +74,7 @@ Formula/<tool>.rb    # only if distribution = Homebrew
 
 - **Repo hosting:** interview asks; **default create private repo + first push**.
 - **CLAUDE.md:** yes — a small per-repo marker recording archetype/profile/
-  distribution (so future `/feature` sessions know the stack without re-asking)
+  distribution (so future `/sdlc-feature` sessions know the stack without re-asking)
   plus a one-line pointer to the global SDLC.
 - **Shell tests:** **bats**, invoked via `test.sh`; the target script must run
   under **both bash and zsh**, and the suite exercises it under both.
@@ -84,5 +84,5 @@ Formula/<tool>.rb    # only if distribution = Homebrew
 
 1. `scaffold.sh` + core templates, test-first (this increment).
 2. Shell profile templates (test.sh/bats/bin/release/Formula).
-3. `/newproject` command wiring: interview → scaffold.sh → git init →
-   optional `gh repo create` → first commit → handoff to `/feature`.
+3. `/sdlc-newproject` command wiring: interview → scaffold.sh → git init →
+   optional `gh repo create` → first commit → handoff to `/sdlc-feature`.
