@@ -6,12 +6,20 @@
 # install them with Homebrew (prompts unless --yes). Off macOS, or without brew,
 # it prints what to install and exits non-zero so the gap is obvious to CI too.
 #
+# With --verify it also runs per-dependency readiness checks — declared in the
+# CHECKS table and run only for the deps that need them: `auth` (a probe command
+# that must succeed, e.g. `gh auth status`) and `version` (the installed version
+# must meet a minimum). A failing readiness check prints the fix and exits
+# non-zero. Install checks always run for all deps; readiness checks are opt-in.
+#
 # Usage:
 #   ./setup.sh            check deps; prompt before installing anything missing
 #   ./setup.sh --yes      install missing deps without prompting (non-interactive)
+#   ./setup.sh --verify   also run per-dep readiness checks (auth, versions)
 #   ./setup.sh --help     show this help
 #
-# Exit status: 0 when all deps are present (or were installed); non-zero otherwise.
+# Exit status: 0 when all deps are present (or were installed) and any requested
+# readiness checks pass; non-zero otherwise.
 
 set -uo pipefail
 
@@ -23,18 +31,102 @@ DEPS=(
 	"shellcheck|shellcheck|ShellCheck"
 )
 
-ASSUME_YES=false
+# Per-dependency readiness checks, run only under --verify and only for deps
+# that need them. One per line, dispatched on the second (type) field:
+#   command | auth    | <probe command>            | <fix hint>
+#   command | version | <min-version> | <version-probe command> [| <fix hint>]
+# auth passes when the probe exits 0; version passes when the probe's reported
+# version is >= min. Override for tests via _SETUP_CHECKS (newline-separated).
+DEFAULT_CHECKS=(
+	"gh|auth|gh auth status|run: gh auth login"
+)
+if [[ -n "${_SETUP_CHECKS+x}" ]]; then
+	CHECKS=()
+	while IFS= read -r _line; do
+		[[ -n "$_line" ]] && CHECKS+=("$_line")
+	done <<<"$_SETUP_CHECKS"
+else
+	CHECKS=("${DEFAULT_CHECKS[@]}")
+fi
 
-usage() { sed -n '3,15p' "$0" | sed 's/^# \{0,1\}//'; }
+ASSUME_YES=false
+VERIFY=false
+
+usage() { sed -n '3,21p' "$0" | sed 's/^# \{0,1\}//'; }
 
 # OS name — overridable via _SETUP_UNAME so the non-macOS path is testable.
 os_name() { printf '%s' "${_SETUP_UNAME:-$(uname -s)}"; }
 have() { command -v "$1" >/dev/null 2>&1; }
 
+# version_ge INSTALLED MIN — true (0) when INSTALLED >= MIN, comparing dotted
+# numeric components left to right (missing trailing components count as 0).
+version_ge() {
+	local a b IFS=.
+	local -a av bv
+	read -ra av <<<"$1"
+	read -ra bv <<<"$2"
+	local i n=${#av[@]}
+	[[ ${#bv[@]} -gt $n ]] && n=${#bv[@]}
+	for ((i = 0; i < n; i++)); do
+		a=${av[i]:-0}; b=${bv[i]:-0}
+		((10#$a > 10#$b)) && return 0
+		((10#$a < 10#$b)) && return 1
+	done
+	return 0 # equal
+}
+
+# run_checks — run the readiness checks (CHECKS) for deps that are present.
+# Prints a ✓/✗ line per check; returns non-zero if any check fails.
+run_checks() {
+	local failed=0 entry cmd ctype
+	echo
+	echo "==> Verifying dependency readiness"
+	for entry in "${CHECKS[@]}"; do
+		IFS='|' read -r cmd ctype rest1 rest2 rest3 <<<"$entry"
+		have "$cmd" || continue # install check already reported anything missing
+		case "$ctype" in
+		auth)
+			# rest1 = probe command, rest2 = fix hint
+			local -a probe; read -ra probe <<<"$rest1"
+			if "${probe[@]}" >/dev/null 2>&1; then
+				printf '    \xe2\x9c\x93 %s authenticated\n' "$cmd"
+			else
+				printf '    \xe2\x9c\x97 %s not authenticated — %s\n' "$cmd" "$rest2"
+				failed=1
+			fi
+			;;
+		version)
+			# rest1 = min version, rest2 = version-probe command, rest3 = fix hint
+			local -a vprobe; read -ra vprobe <<<"$rest2"
+			local out found
+			out="$("${vprobe[@]}" 2>&1)"
+			if [[ "$out" =~ ([0-9]+\.[0-9]+(\.[0-9]+)?) ]]; then
+				found="${BASH_REMATCH[1]}"
+			else
+				found=""
+			fi
+			if [[ -n "$found" ]] && version_ge "$found" "$rest1"; then
+				printf '    \xe2\x9c\x93 %s %s (>= %s)\n' "$cmd" "$found" "$rest1"
+			else
+				printf '    \xe2\x9c\x97 %s %s < required %s%s\n' \
+					"$cmd" "${found:-?}" "$rest1" "${rest3:+ — $rest3}"
+				failed=1
+			fi
+			;;
+		*)
+			printf '    \xe2\x9c\x97 %s: unknown check type "%s"\n' "$cmd" "$ctype" >&2
+			failed=1
+			;;
+		esac
+	done
+	return "$failed"
+}
+
 # --- args -------------------------------------------------------------------
 while [[ $# -gt 0 ]]; do
 	case "$1" in
 	--yes | -y) ASSUME_YES=true ;;
+	--verify) VERIFY=true ;;
 	--help | -h) usage; exit 0 ;;
 	*) printf 'setup.sh: unknown argument: %s (try --help)\n' "$1" >&2; exit 2 ;;
 	esac
@@ -56,6 +148,9 @@ done
 
 if [[ ${#missing[@]} -eq 0 ]]; then
 	echo "All developer dependencies present."
+	if $VERIFY && [[ ${#CHECKS[@]} -gt 0 ]]; then
+		run_checks || { echo; echo "Some readiness checks failed — see above."; exit 1; }
+	fi
 	exit 0
 fi
 
@@ -68,6 +163,7 @@ done
 
 echo
 echo "Missing: ${formulae[*]}"
+$VERIFY && echo "(--verify readiness checks run once all deps are installed — re-run after installing.)"
 
 if [[ "$(os_name)" != "Darwin" ]]; then
 	echo "This installer automates macOS (Homebrew) only. Install the tools above"

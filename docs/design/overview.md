@@ -84,6 +84,16 @@ The orchestrator proposes a tier at CLASSIFY; the human confirms or overrides.
    **key** decisions only) plus a 6-section `README`
    (Purpose · Quick Start · User Guide · Developer Guide · Automated Testing
    Guide · Release Process).
+6. **`setup.sh` separates *install* from *readiness*.** The install check
+   (`command -v`) runs for **all** deps, always. Additional per-dep readiness
+   checks — declared in a `CHECKS` table as `command|type|spec…` — run only for
+   the deps that declare them, and only under `--verify` (opt-in). Two check
+   types: `auth` (spec is a probe command that must exit 0, e.g.
+   `gh auth status`) and `version` (spec is `min-version|version-probe`, compared
+   by one shared comparator). Auth is inherently a tool-specific probe; version
+   shares the comparison but still needs a per-tool probe to read the installed
+   version. A failing readiness check prints the fix and exits non-zero. Mirrored
+   into the scaffold template so every new repo inherits it. (#37)
 
 ## Backlog, branching, CI, and review guide
 

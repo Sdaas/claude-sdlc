@@ -47,6 +47,26 @@ make_bin() {
 	done
 }
 
+# make_gh DIR AUTH_RC VERSION  — install a fake `gh` whose `auth status` exits
+# AUTH_RC and whose `--version` prints VERSION, so both readiness check types are
+# testable without a real login. Any other subcommand is a no-op success.
+make_gh() {
+	local dir="$1" auth_rc="$2" version="$3"
+	mkdir -p "$dir"
+	# The "$1"/$* below are literals written into the generated fake, not this
+	# script's params — they must NOT expand here.
+	# shellcheck disable=SC2016
+	{
+		printf '#!/bin/sh\n'
+		printf 'case "$1" in\n'
+		printf '  auth) exit %s ;;\n' "$auth_rc"
+		printf '  --version) echo "gh version %s (2026-01-01)"; exit 0 ;;\n' "$version"
+		printf '  *) exit 0 ;;\n'
+		printf 'esac\n'
+	} >"$dir/gh"
+	chmod +x "$dir/gh"
+}
+
 # make_brew DIR LOG  — install a fake `brew` in DIR that logs its args to LOG.
 make_brew() {
 	local dir="$1" log="$2"
@@ -60,10 +80,18 @@ make_brew() {
 }
 
 # run_setup BIN UNAME STDIN_FILE : args...  -> sets OUT, RC (isolated PATH=BIN)
+# If the test sets SETUP_CHECKS (even to empty), it is forwarded as _SETUP_CHECKS
+# so the readiness-check table can be overridden without a real dep. Unset =
+# use setup.sh's built-in CHECKS.
 run_setup() {
 	local bin="$1" uname="$2" stdin="$3"; shift 3
-	OUT="$(PATH="$bin" _SETUP_UNAME="$uname" BREW_LOG="$BREW_LOG" \
-		"$BASH_BIN" "$SETUP" "$@" <"$stdin" 2>&1)"
+	if [[ -n "${SETUP_CHECKS+x}" ]]; then
+		OUT="$(PATH="$bin" _SETUP_UNAME="$uname" BREW_LOG="$BREW_LOG" _SETUP_CHECKS="$SETUP_CHECKS" \
+			"$BASH_BIN" "$SETUP" "$@" <"$stdin" 2>&1)"
+	else
+		OUT="$(PATH="$bin" _SETUP_UNAME="$uname" BREW_LOG="$BREW_LOG" \
+			"$BASH_BIN" "$SETUP" "$@" <"$stdin" 2>&1)"
+	fi
 	RC=$?
 }
 
@@ -164,6 +192,88 @@ test_no_brew() {
 	rm -rf "$root"
 }
 
+# --- Test 8: --verify OFF -> readiness checks are skipped (gating) -----------
+# gh is installed but NOT authenticated; without --verify that must NOT fail.
+test_verify_gating() {
+	start "no --verify: unauthenticated gh does not fail the run"
+	local root; root="$(mktemp -d)"
+	BREW_LOG="$root/brew.log"; : >"$BREW_LOG"
+	make_bin "$root/bin" git shellcheck
+	make_gh "$root/bin" 1 2.40.0            # auth status FAILS, but we don't verify
+	make_brew "$root/bin" "$BREW_LOG"
+	run_setup "$root/bin" Darwin /dev/null
+	assert_eq 0 "$RC" "install-only run exits 0 even when gh is unauthenticated"
+	rm -rf "$root"
+}
+
+# --- Test 9: --verify + gh authenticated -> exit 0 --------------------------
+test_verify_auth_ok() {
+	start "--verify: authenticated gh passes"
+	local root; root="$(mktemp -d)"
+	BREW_LOG="$root/brew.log"; : >"$BREW_LOG"
+	make_bin "$root/bin" git shellcheck
+	make_gh "$root/bin" 0 2.40.0            # auth status SUCCEEDS
+	make_brew "$root/bin" "$BREW_LOG"
+	run_setup "$root/bin" Darwin /dev/null --verify
+	assert_eq 0 "$RC" "--verify exits 0 when the auth probe passes"
+	rm -rf "$root"
+}
+
+# --- Test 10: --verify + gh NOT authenticated -> non-zero + remediation ------
+test_verify_auth_fail() {
+	start "--verify: unauthenticated gh fails with remediation"
+	local root; root="$(mktemp -d)"
+	BREW_LOG="$root/brew.log"; : >"$BREW_LOG"
+	make_bin "$root/bin" git shellcheck
+	make_gh "$root/bin" 1 2.40.0            # auth status FAILS
+	make_brew "$root/bin" "$BREW_LOG"
+	run_setup "$root/bin" Darwin /dev/null --verify
+	assert_ne 0 "$RC" "--verify exits non-zero when the auth probe fails"
+	assert_contains "$OUT" "gh auth login" "prints how to fix the unauthenticated gh"
+	rm -rf "$root"
+}
+
+# --- Test 11: --verify + version meets minimum -> exit 0 --------------------
+# Override CHECKS to a version check on gh; fake gh reports 2.40.0 >= 2.0.0.
+test_verify_version_ok() {
+	start "--verify: installed version >= minimum passes"
+	local root; root="$(mktemp -d)"
+	BREW_LOG="$root/brew.log"; : >"$BREW_LOG"
+	make_bin "$root/bin" git shellcheck
+	make_gh "$root/bin" 0 2.40.0
+	make_brew "$root/bin" "$BREW_LOG"
+	SETUP_CHECKS="gh|version|2.0.0|gh --version"
+	run_setup "$root/bin" Darwin /dev/null --verify
+	unset SETUP_CHECKS
+	assert_eq 0 "$RC" "--verify exits 0 when version floor is met"
+	rm -rf "$root"
+}
+
+# --- Test 12: --verify + version below minimum -> non-zero + names floor ------
+test_verify_version_fail() {
+	start "--verify: installed version < minimum fails, names the floor"
+	local root; root="$(mktemp -d)"
+	BREW_LOG="$root/brew.log"; : >"$BREW_LOG"
+	make_bin "$root/bin" git shellcheck
+	make_gh "$root/bin" 0 1.5.0             # too old
+	make_brew "$root/bin" "$BREW_LOG"
+	SETUP_CHECKS="gh|version|2.0.0|gh --version"
+	run_setup "$root/bin" Darwin /dev/null --verify
+	unset SETUP_CHECKS
+	assert_ne 0 "$RC" "--verify exits non-zero when version is too old"
+	assert_contains "$OUT" "2.0.0" "names the required minimum version"
+	rm -rf "$root"
+}
+
+# --- Test 13: --help documents --verify -------------------------------------
+test_help_documents_verify() {
+	start "--help documents --verify"
+	OUT="$("$BASH_BIN" "$SETUP" --help 2>&1)"
+	RC=$?
+	assert_eq 0 "$RC" "--help exits 0"
+	assert_contains "$OUT" "--verify" "help documents the --verify flag"
+}
+
 echo "Running setup tests against: $SETUP"
 echo
 test_help
@@ -173,6 +283,12 @@ test_missing_yes_installs
 test_missing_yes_prompt
 test_non_macos
 test_no_brew
+test_verify_gating
+test_verify_auth_ok
+test_verify_auth_fail
+test_verify_version_ok
+test_verify_version_fail
+test_help_documents_verify
 echo
 printf 'Results: %d passed, %d failed\n' "$PASS" "$FAIL"
 [[ "$FAIL" -eq 0 ]]
