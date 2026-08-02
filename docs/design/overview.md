@@ -21,7 +21,7 @@ with no per-repo setup.
 ```
 LAYER 1 · ENTRY COMMANDS (global, ~/.claude/commands)
    /discovery  /architecture   ← upstream: concept → use cases → arch → backlog
-   /newproject  /feature  /bugfix  /harden  /retrospective  /resume
+   /newproject  /feature  /bugfix  /harden  /retrospective  /sdlc-resume
    → classify work, pick a TIER, walk the gates
         │ drives
 LAYER 2 · GATES (reusable, stack-agnostic skills)
@@ -59,7 +59,7 @@ The orchestrator proposes a tier at CLASSIFY; the human confirms or overrides.
 | `/bugfix` | Fix a bug (reproduce-first: failing test before the fix). |
 | `/harden` | Retrofit the SDLC onto an existing non-SDLC repo. |
 | `/retrospective` | Two modes: **feature retro** (this change) and **session retro** (what went wrong → how to improve the SDLC). |
-| `/resume` | Continue in-flight work from `SESSION_STATE.md`. |
+| `/sdlc-resume` | Continue in-flight work from `SESSION_STATE.md` (reconciled with git + issues + `PROGRESS.md`). Named `/sdlc-resume` to avoid colliding with Claude Code's built-in `/resume`. |
 | `/sdlc-help` | **Guide** — explain how the SDLC works, or map a how-to question to the right command/phase. Advisory and read-only. |
 | `/sdlc-feedback` | **Feedback intake** — turn a reporter's message into a well-formed GitHub issue (prompts for detail if thin; degrades gracefully on missing auth/permissions). Files-and-points only. |
 
@@ -94,6 +94,14 @@ The orchestrator proposes a tier at CLASSIFY; the human confirms or overrides.
    shares the comparison but still needs a per-tool probe to read the installed
    version. A failing readiness check prints the fix and exits non-zero. Mirrored
    into the scaffold template so every new repo inherits it. (#37)
+7. **Cross-session continuity = transient checkpoint + durable cursor.** Every
+   gate-walking command keeps a gitignored, machine-local **`SESSION_STATE.md`**
+   (one in-flight workflow; updated on each gate; **deleted at close-out**) — the
+   *transient* mid-flight state. **`/sdlc-resume`** reads it and **reconciles it
+   with ground truth** (git branch/diff, open issues, `PROGRESS.md`) to propose
+   resuming the owning command at its gate, or the next backlog item — advisory,
+   never auto-acting. `PROGRESS.md` remains the *durable* between-work cursor.
+   Named `/sdlc-resume` (not `/resume`) to avoid Claude Code's built-in. (#19)
 
 ## Backlog, branching, CI, and review guide
 

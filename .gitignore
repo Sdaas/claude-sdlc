@@ -1,2 +1,5 @@
 # temp / scratch
 *.tmp
+
+# in-flight SDLC session checkpoint (machine-local; see sdlc-common §5)
+SESSION_STATE.md

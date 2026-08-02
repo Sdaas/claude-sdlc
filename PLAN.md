@@ -47,7 +47,7 @@ Sequence:
 All depend on **#12** (`/feature`). Parallelizable once it exists:
 ```
 #14 /bugfix   #15 deploy(brew)   #16 profile-sql   #17 profile-frontend
-#18 /retrospective   #19 /resume
+#18 /retrospective   #19 /sdlc-resume
 ```
 
 ## Phase 4 — refactor, adopt, migrate

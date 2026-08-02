@@ -23,16 +23,18 @@ holds the roadmap + dependency order; `docs/design/` holds the architecture.
   well-formed GitHub issue; graceful degradation for non-author reporters) both
   built by `/feature` and merged (PRs #36, #38). Closed #27 as a dup of #34.
   Filed #37 (add a `gh auth status` check to `setup.sh`), surfaced while building #35.
-- **#37 shipped + #14 built.** #37 generalized to `setup.sh --verify` readiness
-  checks (opt-in `auth` probe + `version` floor, declarative `CHECKS` table,
-  mirrored into the scaffold template) — merged (PR #39). #14 `/bugfix` built by
-  `/feature` (prose path): reproduce-first command on `fix/<slug>`, code+prose
-  paths, a Full-tier ladder for security/design/shipped/high-risk bugs, and a
-  design-flaw → `/architecture` escalation. Command + design doc + this tracker.
+- **#37, #14, #19 built.** #37 → `setup.sh --verify` readiness checks (opt-in
+  `auth` probe + `version` floor, declarative `CHECKS`, mirrored into the
+  scaffold) — merged (PR #39). #14 `/bugfix` (reproduce-first; `fix/<slug>`;
+  Full-tier ladder + design-flaw→`/architecture` escalation) — merged (PR #40).
+  #19 `/sdlc-resume` built by `/feature` (prose): cross-session continuity =
+  transient gitignored `SESSION_STATE.md` checkpoint (every gate-walker writes it
+  per `sdlc-common` §5, cleared at close-out) + a read-only resume command that
+  reconciles it with git/issues/`PROGRESS.md`. Renamed from `/resume` (built-in
+  collision). `/sdlc-pause` deferred as a candidate follow-up.
 - **Phase 2 remaining:** none.
 - **NEXT ACTION:** proof-run `/discovery` on a real concept (retro cuts #32 v2);
-  then remaining Phase 3: #15 deploy(brew), #16 profile-sql, #18 /retrospective,
-  #19 /resume.
+  then remaining Phase 3: #15 deploy(brew), #16 profile-sql, #18 /retrospective.
 - **Graduation:** need ~3–4 clean `/feature` runs + no process gaps in retros
   before using the SDLC on OTHER repos (see memory `sdlc-self-hosting`).
 - **Process reminder:** never commit/push before human review + approval (rule #10).
@@ -59,7 +61,15 @@ Newest first. One short entry per working session.
   regression test stays). Code + prose paths; Full-tier ladder
   (security/design/shipped/high-risk); design-flaw → `/architecture` escalation;
   security bug → exploit-first + security-review. Command + `docs/design/bugfix.md`.
-- Next: proof-run `/discovery`; remaining Phase 3 (#15, #16, #18, #19).
+  Merged (PR #40).
+- **Built #19 `/sdlc-resume`** via `/feature` (prose path): (A) a read-only
+  resume command + (B) a `SESSION_STATE.md` checkpoint contract in `sdlc-common`
+  §5 that all 5 gate-walkers write (gitignored; cleared at close-out). Reconciles
+  state with git/issues/`PROGRESS.md`; hands off to the owning command. Renamed
+  from `/resume` (Claude Code built-in collision); removed the superseded
+  untracked `docs/resume-prompt.md`; `.gitignore` + scaffold template updated.
+  `/sdlc-pause` (explicit mid-gate flush) deferred.
+- Next: proof-run `/discovery`; remaining Phase 3 (#15, #16, #18).
 
 ### 2026-08-01 — Session 1 (cont. 8)
 - **Built #34 `/sdlc-help` and #35 `/sdlc-feedback`** via `/feature` (prose path).

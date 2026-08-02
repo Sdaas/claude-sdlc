@@ -10,6 +10,11 @@ reorder.
 **Hard rule (SDLC #10):** never commit or push before the developer has
 reviewed and approved. Present changes, wait for approval, then commit.
 
+**Checkpoint as you go.** On entering each step, update a `SESSION_STATE.md`
+(gitignored) in the working directory per the `sdlc-common` §5 convention, and
+delete it at close-out — so `/sdlc-resume` can continue if the session ends
+mid-flight.
+
 Prerequisite: the SDLC is installed (`~/.claude/skills/sdlc-common/scaffold.sh`
 exists). If it does not, tell the developer to run `apply.sh` from the
 claude-sdlc repo first.
