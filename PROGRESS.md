@@ -23,10 +23,16 @@ holds the roadmap + dependency order; `docs/design/` holds the architecture.
   well-formed GitHub issue; graceful degradation for non-author reporters) both
   built by `/feature` and merged (PRs #36, #38). Closed #27 as a dup of #34.
   Filed #37 (add a `gh auth status` check to `setup.sh`), surfaced while building #35.
+- **#37 shipped + #14 built.** #37 generalized to `setup.sh --verify` readiness
+  checks (opt-in `auth` probe + `version` floor, declarative `CHECKS` table,
+  mirrored into the scaffold template) — merged (PR #39). #14 `/bugfix` built by
+  `/feature` (prose path): reproduce-first command on `fix/<slug>`, code+prose
+  paths, a Full-tier ladder for security/design/shipped/high-risk bugs, and a
+  design-flaw → `/architecture` escalation. Command + design doc + this tracker.
 - **Phase 2 remaining:** none.
 - **NEXT ACTION:** proof-run `/discovery` on a real concept (retro cuts #32 v2);
-  then remaining Phase 3: #14 /bugfix, #15 deploy(brew), #16 profile-sql,
-  #18 /retrospective, #19 /resume. Also open: #37 (setup.sh gh-auth check).
+  then remaining Phase 3: #15 deploy(brew), #16 profile-sql, #18 /retrospective,
+  #19 /resume.
 - **Graduation:** need ~3–4 clean `/feature` runs + no process gaps in retros
   before using the SDLC on OTHER repos (see memory `sdlc-self-hosting`).
 - **Process reminder:** never commit/push before human review + approval (rule #10).
@@ -41,6 +47,19 @@ listed order. Update this file's NEXT ACTION to the active issue #.
 ## Session log
 
 Newest first. One short entry per working session.
+
+### 2026-08-02 — Session 1 (cont. 9)
+- **Shipped #37** via `/feature` (code path): `setup.sh --verify` — opt-in
+  per-dependency readiness checks (`auth` probe + `version` floor) via a
+  declarative `CHECKS` table (overridable with `_SETUP_CHECKS` for tests),
+  mirrored into the scaffold template; 6 new tests; docs in both READMEs +
+  overview. Merged (PR #39).
+- **Built #14 `/bugfix`** via `/feature` (prose path): reproduce-first command
+  (`fix/<slug>`; failing test reproduces the bug → red → root-cause fix → green →
+  regression test stays). Code + prose paths; Full-tier ladder
+  (security/design/shipped/high-risk); design-flaw → `/architecture` escalation;
+  security bug → exploit-first + security-review. Command + `docs/design/bugfix.md`.
+- Next: proof-run `/discovery`; remaining Phase 3 (#15, #16, #18, #19).
 
 ### 2026-08-01 — Session 1 (cont. 8)
 - **Built #34 `/sdlc-help` and #35 `/sdlc-feedback`** via `/feature` (prose path).
