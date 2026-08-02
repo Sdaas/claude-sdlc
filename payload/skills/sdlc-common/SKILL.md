@@ -71,6 +71,22 @@ edits docs) — run each file down its appropriate path.
 - **All testing/release via scripts.** Use the repo's `test.sh` / `release.sh`;
   do not invent ad-hoc commands.
 - **Design stays current.** Record only KEY decisions in `design/overview.md`.
+- **Checkpoint in-flight work (`SESSION_STATE.md`).** Every gate-walking command
+  (`/feature`, `/bugfix`, `/newproject`, `/discovery`, `/architecture`) keeps a
+  **repo-root `SESSION_STATE.md`** — machine-local, **gitignored**, one in-flight
+  workflow at a time. **Update it on entering each gate** (and whenever the
+  developer asks to checkpoint), then **delete it at close-out** (the durable
+  summary goes to the backlog / `PROGRESS.md`, not here). `/sdlc-resume` reads it
+  to continue across sessions. Format:
+
+  ```
+  command: /feature      issue: 19     tier: Standard    path: prose
+  branch: feature/19     gate: 4 (IMPLEMENT)             updated: <ISO-8601>
+  ## Context — decisions so far / what's done / what's next
+  - <interview summary, design decisions, WIP, the immediate next action>
+  ## Resume hint
+  - <optional note-to-self for picking back up>
+  ```
 
 ## 6. Governance matrix (who acts, who approves)
 

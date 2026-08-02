@@ -29,7 +29,7 @@ Give a concise orientation, drawn from the installed commands and skills:
 1. **The phase flow** — the upstream `/discovery → /architecture` (concept → use
    cases → architecture → traced, sequenced backlog), then the build commands
    `/newproject`, `/feature`, `/bugfix`, `/harden`, closing with
-   `/retrospective` and `/resume`.
+   `/retrospective` and `/sdlc-resume`.
 2. **Classify every change** — tier (Quick / Standard / Full) and path
    (code / prose), confirmed with the human before any work (`sdlc-common` §1–3).
 3. **The gate sequence** — interview → design → implement → code-review →

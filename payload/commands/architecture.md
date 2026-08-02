@@ -20,6 +20,11 @@ approve?", not silently added.
 
 Follow the gates in order. Announce each gate. Do not skip or reorder.
 
+**Checkpoint as you go.** On entering each gate, update a `SESSION_STATE.md`
+(gitignored) in the workspace directory per the `sdlc-common` §5 convention, and
+delete it at close-out — so `/sdlc-resume` can continue if the session ends
+mid-flight.
+
 ---
 
 ## Gate 1 — CAPABILITY MAP

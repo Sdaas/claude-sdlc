@@ -12,6 +12,10 @@ approved.
 
 Follow the gates in order. Do not skip or reorder. Announce each gate.
 
+**Checkpoint as you go.** On entering each gate, update the repo-root
+`SESSION_STATE.md` (gitignored) per `sdlc-common` §5, and delete it at close-out.
+This lets `/sdlc-resume` continue the work if the session ends mid-flight.
+
 ---
 
 ## Gate 1 — CLASSIFY

@@ -59,7 +59,7 @@ The SDLC exposes a small set of commands (installed into `~/.claude/commands`):
 | `/bugfix` | Fix a bug (a failing test reproduces it first). |
 | `/harden` | Retrofit the SDLC onto an existing repo. |
 | `/retrospective` | Feature retro, or a session retro to improve the SDLC. |
-| `/resume` | Continue in-flight work. |
+| `/sdlc-resume` | Continue in-flight work across sessions (reads `SESSION_STATE.md`; reconciles with git/issues). |
 | `/sdlc-help` | Explain how the SDLC works, or answer a specific how-to question. |
 | `/sdlc-feedback` | Turn a message into a well-formed GitHub issue (prompts for detail if thin). |
 
