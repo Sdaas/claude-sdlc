@@ -4,12 +4,33 @@
 # Runs ruff (lint + format check) then pytest. Non-zero on any failure.
 # This is what the pre-push hook and CI both call.
 #
+#   ./test.sh                 fast/hermetic lane (pytest -m "not integration")
+#   ./test.sh --integration   full suite, including the integration lane
+#
+# The integration lane holds real-boundary tests (a live service, secrets, a
+# GPU). Its home is LOCAL — the pre-push hook runs it — because a stock CI
+# runner can't provide those boundaries. Integration tests should self-skip
+# when their boundary is absent, so this lane stays non-blocking. PR CI runs the
+# fast lane only.
+#
 # Dev dependency: uv (https://docs.astral.sh/uv/).
 
 set -uo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$REPO_ROOT" || exit 1
+
+# --- args -------------------------------------------------------------------
+# Default excludes the integration lane; --integration runs the full suite.
+PYTEST_MARK=(-m "not integration")
+while [[ $# -gt 0 ]]; do
+	case "$1" in
+	--integration) PYTEST_MARK=() ;;
+	--help | -h) sed -n '7,8p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+	*) echo "test.sh: unknown argument: $1 (try --help)" >&2; exit 2 ;;
+	esac
+	shift
+done
 
 if ! command -v uv >/dev/null 2>&1; then
 	echo "ERROR: uv not found (dev dependency). Install it:" >&2
@@ -42,8 +63,12 @@ else
 	FAILED=1
 fi
 
-echo "==> pytest"
-if uv run pytest -q; then
+if [[ ${#PYTEST_MARK[@]} -eq 0 ]]; then
+	echo "==> pytest (full suite, incl. integration lane)"
+else
+	echo "==> pytest (fast lane — excludes integration)"
+fi
+if uv run pytest -q ${PYTEST_MARK[@]+"${PYTEST_MARK[@]}"}; then
 	echo "    tests passed"
 else
 	echo "    tests FAILED"

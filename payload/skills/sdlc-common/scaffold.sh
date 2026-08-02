@@ -131,6 +131,9 @@ render_shell_profile() {
 	[[ -d "$st" ]] || die "no profile-shell templates at: $st"
 	render "$st/bin-tool.tmpl" "$TARGET/bin/$NAME"
 	render "$st/tool.bats.tmpl" "$TARGET/tests/$NAME.bats"
+	# Seed the opt-in integration lane (real-boundary bats; run via ./test.sh --integration).
+	mkdir -p "$TARGET/tests/integration"
+	: >"$TARGET/tests/integration/.gitkeep"
 	render "$st/test.sh.tmpl" "$TARGET/test.sh"
 	render "$st/release.sh.tmpl" "$TARGET/release.sh"
 	# Shell CI installs bats/zsh — overrides the generic core CI.

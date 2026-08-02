@@ -19,3 +19,24 @@ jobs:
 
       - name: Run test suite
         run: ./test.sh
+
+  # Install the app's RUNTIME deps only (no dev extras) and run the tool once.
+  # This exercises the real import/execution path, so an undeclared transitive
+  # runtime dependency fails loudly here instead of passing green in a dev env
+  # that happened to have it. Never rely on optional transitive deps.
+  clean-install:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+
+      - name: Set up Python
+        run: uv python install 3.11
+
+      - name: Install runtime deps only
+        run: uv sync --no-dev
+
+      - name: Run the tool on a clean install
+        run: uv run --no-sync {{NAME}} --help
