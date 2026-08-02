@@ -43,8 +43,10 @@ cd claude-sdlc
 ./apply.sh --uninstall
 ```
 
-Once installed, the SDLC commands (e.g. `/newproject`, `/feature`) become
-available in Claude Code globally.
+Once installed, the SDLC commands (e.g. `/sdlc-newproject`, `/sdlc-feature`)
+become available in Claude Code globally. Every SDLC-owned command is prefixed
+`sdlc-` so it never collides with Claude Code's built-in or third-party
+commands/skills.
 
 ---
 
@@ -54,11 +56,11 @@ The SDLC exposes a small set of commands (installed into `~/.claude/commands`):
 
 | Command | Purpose |
 |---|---|
-| `/newproject` | Start a new repo — interview, then scaffold README, `design/`, `test.sh`, `release.sh`, hooks, and CI. |
-| `/feature` | Add a feature to an existing SDLC repo. |
-| `/bugfix` | Fix a bug (a failing test reproduces it first). |
-| `/harden` | Retrofit the SDLC onto an existing repo. |
-| `/retrospective` | Feature retro, or a session retro to improve the SDLC. |
+| `/sdlc-newproject` | Start a new repo — interview, then scaffold README, `design/`, `test.sh`, `release.sh`, hooks, and CI. |
+| `/sdlc-feature` | Add a feature to an existing SDLC repo. |
+| `/sdlc-bugfix` | Fix a bug (a failing test reproduces it first). |
+| `/sdlc-harden` | Retrofit the SDLC onto an existing repo. |
+| `/sdlc-retrospective` | Feature retro, or a session retro to improve the SDLC. |
 | `/sdlc-resume` | Continue in-flight work across sessions (reads `SESSION_STATE.md`; reconciles with git/issues). |
 | `/sdlc-help` | Explain how the SDLC works, or answer a specific how-to question. |
 | `/sdlc-feedback` | Turn a message into a well-formed GitHub issue (prompts for detail if thin). |
@@ -83,7 +85,7 @@ payload/              What gets installed
   skills/             Gate skills + stack profiles
 tests/                Tests for this repo's own tooling
 docs/design/          Curated design of the SDLC itself
-templates/            Per-repo artifact templates (scaffolded by /newproject)
+templates/            Per-repo artifact templates (scaffolded by /sdlc-newproject)
 PLAN.md, PROGRESS.md  Build plan and cross-session tracker
 ```
 

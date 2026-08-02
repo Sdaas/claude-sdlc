@@ -1,6 +1,6 @@
 # Use-Case Catalog — <product name>
 
-> Produced by `/discovery`. Each use case is something an actor must be able to
+> Produced by `/sdlc-discovery`. Each use case is something an actor must be able to
 > *do*. Gate: every use case has a priority and a testable "done when"; each
 > traces to an actor; no orphans. Architecture will trace components back to
 > these IDs — keep the IDs stable.

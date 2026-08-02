@@ -1,8 +1,8 @@
-# /discovery — turn a fuzzy concept into gated requirements
+# /sdlc-discovery — turn a fuzzy concept into gated requirements
 
-Triggered by `/discovery "one-line idea"` (or a confirmed natural-language
+Triggered by `/sdlc-discovery "one-line idea"` (or a confirmed natural-language
 request to figure out *what* to build) at the idea stage — **before** a repo
-exists. Produces the concept brief and use-case catalog that `/architecture`
+exists. Produces the concept brief and use-case catalog that `/sdlc-architecture`
 then consumes.
 
 **First, load the `sdlc-discovery` skill** — it defines the artifacts, the
@@ -64,7 +64,7 @@ to an actor; no orphans.
 ## Gate 6 — HUMAN REVIEW & HANDOFF
 
 Present both artifacts with a short review guide (what to read, in what order).
-Wait for approval. On approval, point the human at `/architecture` (which
+Wait for approval. On approval, point the human at `/sdlc-architecture` (which
 requires these two artifacts to exist and be approved).
 
 ---

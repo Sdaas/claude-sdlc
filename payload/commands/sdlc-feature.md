@@ -1,7 +1,7 @@
-# /feature — add a capability to an existing SDLC repo
+# /sdlc-feature — add a capability to an existing SDLC repo
 
-Triggered by `/feature "description"` (or a confirmed natural-language feature
-request) in a repo that already follows this SDLC.
+Triggered by `/sdlc-feature "description"` (or a confirmed natural-language
+feature request) in a repo that already follows this SDLC.
 
 **First, load the `sdlc-common` skill** — it defines the tiers, the code vs prose
 paths, the governance matrix, and the hard rules referenced below. This command
@@ -105,7 +105,7 @@ After approval:
 ## Gate 10 — CLOSE OUT
 
 - Close (or update) the GitHub issue.
-- Full tier: run a short retrospective (`/retrospective`) and record lessons.
+- Full tier: run a short retrospective (`/sdlc-retrospective`) and record lessons.
 
 ---
 

@@ -2,11 +2,11 @@
 name: sdlc-common
 description: >
   Shared vocabulary and rules for the agentic SDLC. Load this whenever running a
-  workflow command (/feature, /bugfix, /harden, /newproject) or when deciding
-  how much process a change needs. Defines tiers, the code vs prose paths, the
-  governance matrix, and the non-negotiable conventions (branching, backlog,
-  review-before-commit). The command that loaded this skill walks the actual
-  gate sequence; this skill defines what each term means.
+  workflow command (/sdlc-feature, /sdlc-bugfix, /sdlc-harden, /sdlc-newproject)
+  or when deciding how much process a change needs. Defines tiers, the code vs
+  prose paths, the governance matrix, and the non-negotiable conventions
+  (branching, backlog, review-before-commit). The command that loaded this
+  skill walks the actual gate sequence; this skill defines what each term means.
 ---
 
 # SDLC — Common Conventions
@@ -91,15 +91,16 @@ edits docs) — run each file down its appropriate path.
   do not invent ad-hoc commands.
 - **Design stays current.** Record only KEY decisions in `design/overview.md`.
 - **Checkpoint in-flight work (`SESSION_STATE.md`).** Every gate-walking command
-  (`/feature`, `/bugfix`, `/newproject`, `/discovery`, `/architecture`) keeps a
-  **repo-root `SESSION_STATE.md`** — machine-local, **gitignored**, one in-flight
-  workflow at a time. **Update it on entering each gate** (and whenever the
-  developer asks to checkpoint), then **delete it at close-out** (the durable
-  summary goes to the backlog / `PROGRESS.md`, not here). `/sdlc-resume` reads it
-  to continue across sessions. Format:
+  (`/sdlc-feature`, `/sdlc-bugfix`, `/sdlc-newproject`, `/sdlc-discovery`,
+  `/sdlc-architecture`) keeps a **repo-root `SESSION_STATE.md`** —
+  machine-local, **gitignored**, one in-flight workflow at a time. **Update it
+  on entering each gate** (and whenever the developer asks to checkpoint), then
+  **delete it at close-out** (the durable summary goes to the backlog /
+  `PROGRESS.md`, not here). `/sdlc-resume` reads it to continue across
+  sessions. Format:
 
   ```
-  command: /feature      issue: 19     tier: Standard    path: prose
+  command: /sdlc-feature issue: 19     tier: Standard    path: prose
   branch: feature/19     gate: 4 (IMPLEMENT)             updated: <ISO-8601>
   ## Context — decisions so far / what's done / what's next
   - <interview summary, design decisions, WIP, the immediate next action>
@@ -126,3 +127,14 @@ edits docs) — run each file down its appropriate path.
 Read the repo's `CLAUDE.md` marker (archetype / profile / distribution) to know
 the stack without re-asking. Use it to pick the right stack profile
 (`profile-shell`, etc.) for scaffolding, tests, and the review checklist.
+
+## 8. Naming convention (non-negotiable)
+
+**Every SDLC-owned slash command is prefixed `sdlc-`** — `/sdlc-feature`,
+`/sdlc-bugfix`, `/sdlc-newproject`, `/sdlc-discovery`, `/sdlc-architecture`,
+`/sdlc-retrospective`, `/sdlc-resume`, `/sdlc-help`, `/sdlc-feedback`, and any
+future one (e.g. `/sdlc-harden`). Claude Code and third-party tools keep adding
+built-in/global commands and skills (`/help`, `/verify`, …); an unprefixed name
+collides with them sooner or later (#45). When authoring a **new** command or
+skill for this repo, name it `sdlc-<name>` from the first draft — do not ship
+it unprefixed and rename later.

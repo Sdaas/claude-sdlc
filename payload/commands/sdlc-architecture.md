@@ -1,16 +1,16 @@
-# /architecture — turn requirements into a structured, sequenced plan
+# /sdlc-architecture — turn requirements into a structured, sequenced plan
 
-Triggered by `/architecture` in a product workspace where `/discovery` has
-already produced an approved concept brief and use-case catalog. Produces the
-capability map, the C4-ish container diagram, the decision records, and the
-**feature backlog** that `/feature` builds one item at a time.
+Triggered by `/sdlc-architecture` in a product workspace where `/sdlc-discovery`
+has already produced an approved concept brief and use-case catalog. Produces
+the capability map, the C4-ish container diagram, the decision records, and the
+**feature backlog** that `/sdlc-feature` builds one item at a time.
 
 **First, load the `sdlc-discovery` skill** — it defines the artifacts, the gates,
 the traceability rule (§2), and the handoff to GitHub Issues (§5). This command
 walks the gate sequence; the skill defines what each term means.
 
 **Precondition:** `discovery/concept.md` and `discovery/use-cases.md` exist and
-are gate-approved. If not, stop and point the human at `/discovery`.
+are gate-approved. If not, stop and point the human at `/sdlc-discovery`.
 
 **Prime rule (§1):** the human still owns the domain truth. Any capability or
 component you propose that no use case demands must be surfaced as "AI proposes —
@@ -49,7 +49,7 @@ Skip choices with an obvious answer. This is the "why I chose what" record.
 
 ## Gate 4 — FEATURE BACKLOG
 
-Decompose into features sized for one `/feature` run. Write
+Decompose into features sized for one `/sdlc-feature` run. Write
 `architecture/components.md` from the template: each feature **traced** to
 use-case IDs, **sequenced** by dependency + deferral discipline, with a written
 **sequencing rationale**. Pass the **backlog gate** (skill §3): no floating
@@ -64,15 +64,15 @@ Address changes and re-present. Do not hand off unapproved.
 
 On approval, optionally create **GitHub Issues** from the P0 backlog with
 `Depends on: #N` lines (backlog = GitHub Issues, `sdlc-common` §5). Update
-`PROGRESS.md`/the board. Next step for the human: `/newproject` to scaffold, then
-`/feature` on the earliest unblocked P0.
+`PROGRESS.md`/the board. Next step for the human: `/sdlc-newproject` to scaffold,
+then `/sdlc-feature` on the earliest unblocked P0.
 
 ---
 
 ## Rules
 
 - Traceability is mandatory (§2): a feature that can't name its use case is
-  dropped or sent back to `/discovery` — it does not get built.
+  dropped or sent back to `/sdlc-discovery` — it does not get built.
 - Every contested decision gets an ADR with a metric; a decision without a metric
   is just a preference.
 - Sequence by real dependencies + deferral, and write the rationale down — this

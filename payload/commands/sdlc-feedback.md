@@ -1,13 +1,13 @@
 # /sdlc-feedback — turn a message into a well-formed GitHub issue
 
 Triggered by `/sdlc-feedback "a message"` — e.g.
-`/sdlc-feedback /feature didn't ask me to confirm the tier` or
+`/sdlc-feedback /sdlc-feature didn't ask me to confirm the tier` or
 `/sdlc-feedback blah blah doesn't work`. Captures the reporter's feedback and
 files it as a GitHub issue on the current repo, prompting for detail when the
 message is thin.
 
 **This command files an issue — nothing more.** It does not fix the problem,
-create a branch, or start `/feature` / `/bugfix`. After filing it may *point* at
+create a branch, or start `/sdlc-feature` / `/sdlc-bugfix`. After filing it may *point* at
 the next command; the human invokes it.
 
 **The reporter may not be the repo author.** Handle missing auth and missing
@@ -58,7 +58,7 @@ before filing. Body template:
 <desired behavior>
 
 ## Context
-Command/phase: <e.g. /feature, DESIGN gate> · Tier: <if known>
+Command/phase: <e.g. /sdlc-feature, DESIGN gate> · Tier: <if known>
 
 ## Steps to reproduce
 <numbered steps — omit for non-bugs>

@@ -1,15 +1,15 @@
-# `/discovery` + `/architecture` — Design
+# `/sdlc-discovery` + `/sdlc-architecture` — Design
 
 The upstream phase that turns a fuzzy concept into gated, versioned artifacts,
 **before** a repo exists. Tracks Issue #32.
 
 ```
-/discovery → /architecture → /newproject → /feature → /feature → …
+/sdlc-discovery → /sdlc-architecture → /sdlc-newproject → /sdlc-feature → /sdlc-feature → …
   (what)        (how)         (scaffold)   (build one component at a time)
 ```
 
-Today the SDLC starts at "scaffold a repo" (`/newproject`) or "add to a repo"
-(`/feature`) — both assume the big picture already lives in someone's head.
+Today the SDLC starts at "scaffold a repo" (`/sdlc-newproject`) or "add to a repo"
+(`/sdlc-feature`) — both assume the big picture already lives in someone's head.
 These two commands make that big picture an explicit input.
 
 ## Why (the motivating failure)
@@ -48,16 +48,16 @@ it decays into chat slop.** Four artifacts, four gates:
    (`In your words:`) separate from **AI distillation** (labeled, approved). This
    gives provenance — you can always tell your requirements from inferred ones —
    which kills the "AI invents a requirement that then gets built" failure.
-2. **Traceability = anti-slop.** use case → capability → component/feature → back
+2. **Traceability = anti-slop.** use case → capability → component/sdlc-feature → back
    to use case. A feature that can't name the use case it serves does not get
    built. A use case no component serves is flagged as an orphan.
 
 ## Terminal artifact: the feature backlog
 
-`/architecture`'s last gate produces `components.md` — a list of **features**
-(each sized for one `/feature` run), **traced** to use-case IDs and **sequenced**
+`/sdlc-architecture`'s last gate produces `components.md` — a list of **features**
+(each sized for one `/sdlc-feature` run), **traced** to use-case IDs and **sequenced**
 by dependency + deferral. That flows into your existing machinery: GitHub Issues
-with `Depends on: #N` → `/feature` builds the earliest unblocked one. The medical
+with `Depends on: #N` → `/sdlc-feature` builds the earliest unblocked one. The medical
 thread's hand-rolled, drifting "Sprint 2C…2J" list is exactly this artifact done
 without gates or traceability; ours makes it first-class.
 
@@ -68,27 +68,27 @@ without gates or traceability; ours makes it first-class.
    locations, both gate sequences.
 2. **`payload/skills/sdlc-discovery/templates/`** — `concept.md`,
    `use-cases.md`, `decision.md`, `components.md`.
-3. **`payload/commands/discovery.md`** + **`payload/commands/architecture.md`** —
+3. **`payload/commands/sdlc-discovery.md`** + **`payload/commands/sdlc-architecture.md`** —
    thin gate-walkers over the skill.
 
 ## Artifact home & handoff (v1 decision)
 
 Artifacts are plain markdown in a **product workspace** (`discovery/`,
-`architecture/`), usually not yet a code repo. `/newproject` later seeds a
+`architecture/`), usually not yet a code repo. `/sdlc-newproject` later seeds a
 scaffolded repo's `design/` from them. **v1 does not hard-wire that handoff** —
 it only fixes the locations. Deferral discipline: the first real run tells us how
 tight the coupling must be.
 
 ## How we validate v1 (proof by running)
 
-Ship v1, then do the **first real `/discovery` run** on an actual concept. The
+Ship v1, then do the **first real `/sdlc-discovery` run** on an actual concept. The
 run's primary output is the artifacts; its **secondary output is the retro** —
 "the command should've asked me X / shouldn't have done Y" — which cuts v2. Same
-self-hosting loop already used for `/feature`.
+self-hosting loop already used for `/sdlc-feature`.
 
 ## Non-goals (v1)
 
-- No hard-wired `/newproject` handoff (locations only).
+- No hard-wired `/sdlc-newproject` handoff (locations only).
 - No automatic GitHub-issue creation without approval.
 - Not a heavyweight framework (arc42/RUP) — curated artifacts, scaled to the idea.
 - No model/token optimization.

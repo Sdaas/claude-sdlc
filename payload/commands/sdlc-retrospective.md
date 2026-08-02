@@ -1,8 +1,8 @@
-# /retrospective — reflect on a change or a session, and record the lessons
+# /sdlc-retrospective — reflect on a change or a session, and record the lessons
 
-Triggered by `/retrospective feature`, `/retrospective session`, or bare
-`/retrospective`. Runs a short, gated reflection and writes **one** durable
-markdown doc into the **working repo's** `docs/retrospectives/`.
+Triggered by `/sdlc-retrospective feature`, `/sdlc-retrospective session`, or
+bare `/sdlc-retrospective`. Runs a short, gated reflection and writes **one**
+durable markdown doc into the **working repo's** `docs/retrospectives/`.
 
 **First, load the `sdlc-common` skill** — it defines the governance matrix and
 the hard conventions (backlog = GitHub Issues, review before commit) this command
@@ -10,7 +10,7 @@ respects.
 
 **This command reflects, writes one doc, and points — nothing more.** It does
 not branch, fix, run other gates, or commit. Committing the doc is left to the
-surrounding `/feature` / `/bugfix` close-out or to the human (rule #10).
+surrounding `/sdlc-feature` / `/sdlc-bugfix` close-out or to the human (rule #10).
 
 **Two modes:**
 
@@ -68,7 +68,7 @@ lessons back to acceptance criteria where relevant.
 ## Gate 4 — FOLLOW-UPS
 
 Turn actionable lessons into candidate follow-ups (e.g. "add a boundary-inventory
-step to `/harden`", "clarify the VERIFY skip rule"). For each one:
+step to `/sdlc-harden`", "clarify the VERIFY skip rule"). For each one:
 - **Propose** it and ask whether to **file it as a GitHub issue** now (or to
   point at `/sdlc-feedback` to file it). File **only** on explicit per-item
   approval — one confirmation per item; never auto-file, never file silently.

@@ -1,6 +1,6 @@
-# /bugfix — fix a bug in an existing SDLC repo (reproduce-first)
+# /sdlc-bugfix — fix a bug in an existing SDLC repo (reproduce-first)
 
-Triggered by `/bugfix "what's wrong"` (or a confirmed natural-language bug
+Triggered by `/sdlc-bugfix "what's wrong"` (or a confirmed natural-language bug
 report) in a repo that already follows this SDLC.
 
 **First, load the `sdlc-common` skill** — it defines the tiers, the code vs prose
@@ -56,8 +56,8 @@ Interview to a reliable reproduction, not just a description:
   payload.
 - **Escalation check (design flaw).** If the root cause is architectural — the
   honest fix changes a component's contract or an existing decision — **stop**.
-  Do not patch at the wrong altitude. Recommend re-running **`/architecture`** to
-  revise the relevant decision/ADR first, then return and implement the fix under
+  Do not patch at the wrong altitude. Recommend re-running **`/sdlc-architecture`**
+  to revise the relevant decision/ADR first, then return and implement the fix under
   **Full** (design-review before coding).
 - **Security check.** If the bug is a vulnerability, raise the tier to **Full**
   and treat the reproduction as an **exploit** (see Gate 4).
@@ -138,7 +138,7 @@ After approval:
 ## Gate 10 — CLOSE OUT
 
 - Close (or update) the GitHub issue (note the root cause and the regression test).
-- Full tier: run a short retrospective (`/retrospective`) and record lessons.
+- Full tier: run a short retrospective (`/sdlc-retrospective`) and record lessons.
 
 ---
 
@@ -147,7 +147,7 @@ After approval:
 - **Reproduce before you fix.** No fix without a red test first (code path),
   when a test is feasible.
 - **Fix the root cause, not the symptom.** If the root cause is a design flaw,
-  escalate to `/architecture` — do not bandaid.
+  escalate to `/sdlc-architecture` — do not bandaid.
 - Review before commit (#10) — every tier, including Quick.
 - Trivial → `main`; everything else → `fix/<slug>`.
 - Tests green before push and merge; all via `./test.sh`.

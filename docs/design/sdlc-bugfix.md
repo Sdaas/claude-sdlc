@@ -1,13 +1,13 @@
-# `/bugfix` — Design
+# `/sdlc-bugfix` — Design
 
 Fix a bug in an **existing** SDLC repo through the gated, human-in-the-loop
-workflow. Tracks Issue #14. Built by `/feature` (prose path), so it is a sibling
-of `/feature` and reuses the same 10-gate skeleton and the `sdlc-common` rulebook.
+workflow. Tracks Issue #14. Built by `/sdlc-feature` (prose path), so it is a sibling
+of `/sdlc-feature` and reuses the same 10-gate skeleton and the `sdlc-common` rulebook.
 
 ## Why a separate command
 
 A bug fix is not a feature: its discipline is **reproduce-first**, and its risk
-profile skews toward security and design flaws. `/bugfix` encodes that discipline
+profile skews toward security and design flaws. `/sdlc-bugfix` encodes that discipline
 so a fix can't skip the failing-test-first step or quietly patch a symptom.
 
 ## Defining rule — reproduce before you fix
@@ -15,7 +15,7 @@ so a fix can't skip the failing-test-first step or quietly patch a symptom.
 A failing test that **reproduces the bug** must exist and go **red** before any
 fix is written (code path, whenever a test is feasible). The reproducing test
 then **stays** as a permanent regression test. This is the one non-negotiable
-that distinguishes `/bugfix` from `/feature`.
+that distinguishes `/sdlc-bugfix` from `/sdlc-feature`.
 
 ## Two paths
 
@@ -46,8 +46,8 @@ Bug fixes branch **`fix/<slug>`** (not `feature/<slug>`), per `sdlc-common` §2.
 
 ## Two escalations that keep the fix at the right altitude
 
-- **Design flaw → `/architecture`.** If the root cause is architectural, `/bugfix`
-  stops and routes back to `/architecture` to revise the decision/ADR first, then
+- **Design flaw → `/sdlc-architecture`.** If the root cause is architectural, `/sdlc-bugfix`
+  stops and routes back to `/sdlc-architecture` to revise the decision/ADR first, then
   implements under Full. Patching a design flaw at function scope is a bandaid.
 - **Security flaw → exploit-first, root-cause-by-class.** The reproducing test is
   an exploit/regression test; the fix addresses the **input class**, not the one
@@ -55,7 +55,7 @@ Bug fixes branch **`fix/<slug>`** (not `feature/<slug>`), per `sdlc-common` §2.
 
 ## Gate sequence
 
-Same 10 gates as `/feature`, with three deltas:
+Same 10 gates as `/sdlc-feature`, with three deltas:
 
 ```
 CLASSIFY   — tier ladder w/ explicit Full triggers; path; branch fix/<slug>
@@ -76,11 +76,11 @@ A bug that reached production usually did so *because* its boundary was mocked �
 the green regression test can repeat that mistake. VERIFY re-observes the **real
 reported symptom** on the real flow, not just a green test, so a fix that only
 satisfies a mock cannot be called Done. See `sdlc-common` §3 (mock-obligation)
-and §5 (Definition of Done); shared spine with the `/feature` VERIFY gate.
+and §5 (Definition of Done); shared spine with the `/sdlc-feature` VERIFY gate.
 
 ## Relationship to the `fix-shell-bug` skill
 
 The installed `fix-shell-bug` skill is the shell-specific, deep-dive version of
-this discipline (write-a-failing-test-that-reproduces-the-bug-first). `/bugfix`
+this discipline (write-a-failing-test-that-reproduces-the-bug-first). `/sdlc-bugfix`
 is the language-agnostic SDLC command; on a shell repo it and that skill share
 the same reproduce-first spine.
