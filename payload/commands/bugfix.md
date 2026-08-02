@@ -61,14 +61,22 @@ Interview to a reliable reproduction, not just a description:
   **Full** (design-review before coding).
 - **Security check.** If the bug is a vulnerability, raise the tier to **Full**
   and treat the reproduction as an **exploit** (see Gate 4).
+- **Boundary inventory.** Name the external boundaries in play — network
+  services, subprocesses/CLIs, the filesystem, runtime dependencies, the
+  user-facing entry point where the symptom appears. If the bug lives at a
+  **mocked** boundary, that mock is likely why it shipped: the fix owes a
+  non-mocked test there (`sdlc-common` §3) and a VERIFY of the real symptom
+  (Gate 5).
 
 Summarize the repro + root cause back to the developer and confirm before fixing.
 
 ## Gate 3 — DESIGN (brief)
 
 State the fix approach and any alternatives. Confirm the fix addresses the root
-cause named in Gate 2 (not the symptom). Record only **key** decisions into
-`design/overview.md` (curated). Present it; get agreement.
+cause named in Gate 2 (not the symptom). For each boundary from the Gate 2
+inventory, state **how it will be really exercised** (the non-mocked test and the
+VERIFY step). Record only **key** decisions into `design/overview.md` (curated).
+Present it; get agreement.
 (Full tier: run a design-review pass before proceeding.)
 
 ## Gate 4 — IMPLEMENT
@@ -88,31 +96,46 @@ cause named in Gate 2 (not the symptom). Record only **key** decisions into
 2. Self-check against the `sdlc-common` §4 prose checklist, and **re-verify** the
    corrected instruction actually produces the right outcome.
 
-## Gate 5 — CODE REVIEW
+## Gate 5 — VERIFY (observe the real thing)
+
+Green tests are not Done (`sdlc-common` §5). Drive the **real** flow and confirm
+the **reported symptom is actually gone** — not just that the regression test is
+green. For **every external boundary** in the Gate 2/3 inventory, exercise it
+**un-mocked** at least once; if the bug lived at a mocked boundary, this is the
+step that would have caught it (use the `verify` / `run` skills).
+
+- **Required** when the bug touches an external service/dependency or a
+  user-facing entry point.
+- **Skippable only** for a pure-internal or prose fix with no runtime surface
+  ("nothing to drive") — and then **state the one-line reason** for skipping.
+
+Not Done until this passes. If the real symptom persists, go back to IMPLEMENT.
+
+## Gate 6 — CODE REVIEW
 
 Two-pass review of the change (prose: checklist review). Confirm no new
 regressions and that the root cause — not just the reported symptom — is closed.
 Fix findings. (Full tier: also a **security-review** pass.)
 
-## Gate 6 — REVIEW GUIDE
+## Gate 7 — REVIEW GUIDE
 
 Present the changed files, a recommended review order, and one line per file on
 why it matters — including **the regression test and the line where the root
 cause was fixed**.
 
-## Gate 7 — HUMAN REVIEW (approval gate — rule #10)
+## Gate 8 — HUMAN REVIEW (approval gate — rule #10)
 
 Wait for the developer to review and approve. Do not proceed to commit until
 approved. Address any requested changes and re-present.
 
-## Gate 8 — COMMIT & PUSH
+## Gate 9 — COMMIT & PUSH
 
 After approval:
 - Commit with a clear message referencing the issue (state the root cause fixed).
 - Push. The pre-push hook runs `./test.sh`; it must pass.
 - Open a PR if the repo uses them; merge only with green CI and approval.
 
-## Gate 9 — CLOSE OUT
+## Gate 10 — CLOSE OUT
 
 - Close (or update) the GitHub issue (note the root cause and the regression test).
 - Full tier: run a short retrospective (`/retrospective`) and record lessons.
@@ -128,4 +151,7 @@ After approval:
 - Review before commit (#10) — every tier, including Quick.
 - Trivial → `main`; everything else → `fix/<slug>`.
 - Tests green before push and merge; all via `./test.sh`.
+- **Not Done on green tests alone** — VERIFY the real symptom is gone, and
+  exercise every external boundary un-mocked once (`sdlc-common` §3, §5). A green
+  regression test against a mock is exactly the failure that ships bugs.
 - If the report is vague, get a reliable repro before starting — do not guess.

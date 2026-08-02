@@ -24,7 +24,7 @@ The path is proposed at CLASSIFY and confirmed by the human.
 | Tier | Branch | Gate path |
 |---|---|---|
 | **Quick** | `main` | classify → surgical change → **review** → commit |
-| **Standard** | `feature/<slug>` | classify → interview → design(brief) → implement → review-guide → **human review** → commit → pre-push |
+| **Standard** | `feature/<slug>` | classify → interview → design(brief) → implement → verify → code-review → review-guide → **human review** → commit → pre-push |
 | **Full** | `feature/<slug>` | Standard + design-review, security-review, retrospective |
 
 `implement` = the CODE or PROSE path above. Tier is proposed at CLASSIFY; human
@@ -39,11 +39,26 @@ CLASSIFY (issue + tier + path + branch)
   → IMPLEMENT
        code path : write failing test → red → implement → green → refactor
        prose path: draft artifact → self-check vs checklist
+  → VERIFY (drive the real flow; exercise each boundary un-mocked; Def. of Done)
   → CODE-REVIEW (2-pass; prose: checklist review)
   → REVIEW-GUIDE (changed files + recommended order)
   → HUMAN REVIEW (approval gate — rule #10)
   → COMMIT → PRE-PUSH (test.sh green) → optional PR/merge
 ```
+
+## Why a VERIFY gate (#42)
+
+Green hermetic tests are necessary but not sufficient: a red written against a
+**mock** goes green the moment the mock is satisfied, proving only the mock.
+medical-ocr#7 shipped fully green because the external boundary was mocked — a
+missing runtime dependency and a truncation default both passed CI. So after
+IMPLEMENT, **VERIFY** drives the real user-facing flow and exercises every
+external boundary un-mocked at least once, before code review. This is the
+concrete enforcement of the **Definition of Done** ("green tests AND observed
+behavior", `sdlc-common` §5) and the **mock-obligation rule** (§3: mocking a
+boundary owes ≥1 opt-in non-mocked test there). Required when the change crosses
+an external boundary or user-facing entry point; skippable — with a stated
+reason — only when there is no runtime surface to drive.
 
 ## What it reads / writes
 

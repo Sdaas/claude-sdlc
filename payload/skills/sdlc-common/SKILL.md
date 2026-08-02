@@ -42,6 +42,15 @@ Propose a tier; the human confirms or overrides.
   red → implement → green → refactor. Where valuable, write the test as an
   isolated subagent that sees the requirements but NOT the implementation plan,
   so tests encode intent, not the code. All tests run via the repo's `test.sh`.
+  **Hermetic tests are necessary, not sufficient.** Mocking an external boundary
+  (a network service, a subprocess/CLI, the filesystem, a runtime dependency)
+  only proves the mock — a red against a mock goes green as soon as the mock is
+  satisfied, even if the real boundary is broken. So **mocking a boundary
+  obligates ≥1 non-mocked test** (a real or contract test) at that boundary,
+  marked **opt-in/skippable** (local + nightly) so PR CI stays green without
+  secrets/GPUs, **plus a VERIFY run** (see §5, Definition of Done) before Done.
+  Beware: the isolated test-writer subagent, handed a mocked boundary, tends to
+  *reinforce* the mock — name the real boundary in its brief.
 - **PROSE path** — markdown skills, docs, design, templates. No red-green.
   Instead: draft → **self-check against the prose checklist** (§4) → human
   review. Still gated by review-guide and review-before-commit.
@@ -56,6 +65,9 @@ edits docs) — run each file down its appropriate path.
 - Are cross-references (`#issue`, file paths, skill names) correct?
 - Would a new reader act correctly from this alone? No leftover placeholders?
 - Curated, not exhaustive — key points only (esp. `design/overview.md`).
+- If the change crosses an external boundary or a user-facing entry point: is
+  there a non-mocked (real/contract) test at that boundary, and was the real
+  flow observed at VERIFY? (Definition of Done, §5.)
 
 ## 5. Hard conventions (non-negotiable)
 
@@ -68,6 +80,13 @@ edits docs) — run each file down its appropriate path.
   review order, and one line each on why the file matters / where the key change
   is. The human never guesses where the substance is.
 - **Tests green before push and merge.** The pre-push hook and CI run `test.sh`.
+- **Definition of Done = green tests AND observed behavior.** A change is Done
+  only when its tests are green **and** the real user-facing flow has been
+  observed meeting its acceptance criteria (the **VERIFY** gate). Green hermetic
+  tests alone are never Done for a change that crosses an external boundary or a
+  user-facing entry point — see the mock-obligation rule (§3). VERIFY is
+  skippable only for a pure-internal/prose change with no runtime surface
+  ("nothing to drive"), and only with an explicitly stated one-line reason.
 - **All testing/release via scripts.** Use the repo's `test.sh` / `release.sh`;
   do not invent ad-hoc commands.
 - **Design stays current.** Record only KEY decisions in `design/overview.md`.
