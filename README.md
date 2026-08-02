@@ -106,6 +106,20 @@ Developer dependencies:
 ```bash
 ./setup.sh          # check deps; prompt before installing anything
 ./setup.sh --yes    # install missing deps without prompting (CI-friendly)
+./setup.sh --verify # also run per-dep readiness checks (auth, versions)
+```
+
+The plain run only checks that each tool is **installed**. `--verify` additionally
+runs **readiness checks** for the deps that declare one — today `gh` must be
+authenticated (`gh auth status`); a failed check prints the fix (`gh auth login`)
+and exits non-zero. Checks live in the `CHECKS` table near the top of `setup.sh`:
+
+```bash
+# command | auth    | <probe command>            | <fix hint>
+# command | version | <min-version> | <version-probe command> [| <fix hint>]
+"gh|auth|gh auth status|run: gh auth login"
+# add a version floor when a tool needs one, e.g.:
+# "git|version|2.30.0|git --version|brew upgrade git"
 ```
 
 On non-macOS systems it reports what to install by hand. Then install the local

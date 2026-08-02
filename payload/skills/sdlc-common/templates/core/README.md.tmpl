@@ -34,7 +34,14 @@ Run the checker to see what's missing and install it (macOS/Homebrew):
 ```bash
 ./setup.sh          # prompts before installing anything
 ./setup.sh --yes    # install without prompting (CI / non-interactive)
+./setup.sh --verify # also run per-dep readiness checks (auth, versions)
 ```
+
+The plain run checks each tool is **installed**. `--verify` additionally runs
+**readiness checks** for the deps that declare one — by default `gh` must be
+authenticated (`gh auth status`); a failed check prints the fix and exits
+non-zero. Declare checks in the `CHECKS` table near the top of `setup.sh`
+(`auth` = a probe that must succeed; `version` = an installed-version floor).
 
 On other platforms `setup.sh` reports what to install by hand.
 
