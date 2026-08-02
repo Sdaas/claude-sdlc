@@ -74,9 +74,15 @@ Edit `<dir>/design/overview.md`: fill the **Constraints** and **Design &
 Usability Considerations** sections from answers 7–8. Keep it curated — key
 points only.
 
-## Step 5 — Review before commit (gate)
+## Step 5 — Smoke the scaffold, then review before commit (gate)
 
-Present the scaffolded files with a short **review guide** (what to look at
+First, **run the tool once** from the fresh scaffold — `./test.sh` (tests pass)
+**and** run the tool itself (e.g. `{{name}} --help`, or `uv run <name> --help` /
+`./bin/<name> --help`). A green suite is not enough: a fresh clone must actually
+*run*, or something (a missing runtime dep, a broken entry point) is wrong. This
+"fresh clone → run once" check is part of the Definition of Done for the scaffold.
+
+Then present the scaffolded files with a short **review guide** (what to look at
 first). **Wait for the developer's approval.** Do not proceed to commit until
 approved.
 
@@ -106,7 +112,8 @@ If hosting was requested, confirm visibility (default private) and create it:
 gh repo create <owner>/<name> --private --source=. --remote=origin --push
 ```
 
-The pre-push hook runs `./test.sh` before the push completes.
+The pre-push hook runs `./test.sh --integration` (the full lane, incl.
+real-boundary tests) before the push completes.
 
 ## Step 8 — Seed backlog + hand off
 

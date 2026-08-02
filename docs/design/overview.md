@@ -115,6 +115,23 @@ The orchestrator proposes a tier at CLASSIFY; the human confirms or overrides.
    missing runtime dependency and a truncation default. The rule lives once in
    `sdlc-common` (§3 mock-obligation, §4 checklist, §5 Definition of Done) and is
    walked by both commands.
+9. **Real-boundary tests have a scaffolded home, and pre-push is their runner
+   (#43).** #42 *mandates* a non-mocked test at every boundary; #43 gives it a
+   place to live. The **python** and **shell** profiles split their suite into a
+   fast/hermetic default and an **opt-in integration lane** (`./test.sh
+   --integration`): python via a registered `integration` pytest marker
+   (default run is `-m "not integration"`), shell via a `tests/integration/`
+   directory the default `bats tests/` skips. The lane's home is **local**, not
+   CI — its boundaries (a running service, GPUs, secrets) can't exist on a stock
+   runner — so the **pre-push hook runs `./test.sh --integration`**, and
+   integration tests **self-skip when their boundary is absent** (non-blocking,
+   but automatic when it's up). PR CI keeps running the fast lane only; the
+   python CI adds a **clean-install** job (`uv sync --no-dev` + run the tool)
+   that fails loudly on an **undeclared runtime dependency** (the medical-ocr#7
+   `Pillow` case). No integration job ships in CI (honest: it can't provide the
+   boundary). Cross-profile, `/newproject` scaffolds a "fresh clone → run once"
+   path and adds "run the tool once" to the Definition of Done. Frontend gets
+   the same lanes in a later issue.
 
 ## Backlog, branching, CI, and review guide
 

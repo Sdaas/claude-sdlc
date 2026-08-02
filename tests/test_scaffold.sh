@@ -328,6 +328,65 @@ test_frontend_generated_shellcheck() {
 	rm -rf "$(dirname "$tgt")"
 }
 
+# --- Test 14: python profile has an opt-in integration lane (#43) -----------
+# Default run is fast/hermetic (pytest -m "not integration"); --integration runs
+# the full suite. The `integration` marker is registered so pytest doesn't warn.
+test_python_integration_lane() {
+	start "python profile: opt-in integration lane in test.sh + registered marker"
+	local tgt; tgt="$(mktemp -d)/proj"
+	scaffold_py "$tgt" >/dev/null 2>&1
+	assert_contains "$tgt/pyproject.toml" "markers" "pyproject registers pytest markers"
+	assert_contains "$tgt/pyproject.toml" "integration:" "pyproject documents the integration marker"
+	assert_contains "$tgt/test.sh" "not integration" "default run excludes integration tests"
+	assert_contains "$tgt/test.sh" "--integration" "test.sh accepts an --integration flag"
+	rm -rf "$(dirname "$tgt")"
+}
+
+# --- Test 15: python CI has a clean runtime-only install job (#43) -----------
+# Installs runtime deps only (no dev extras) and runs the tool, so an undeclared
+# transitive runtime dependency fails loudly instead of passing green.
+test_python_clean_install_ci() {
+	start "python CI has a clean-install job that runs the tool on runtime deps only"
+	local tgt; tgt="$(mktemp -d)/proj"
+	scaffold_py "$tgt" >/dev/null 2>&1
+	assert_contains "$tgt/.github/workflows/ci.yml" "clean-install" "CI defines a clean-install job"
+	assert_contains "$tgt/.github/workflows/ci.yml" "uv sync --no-dev" "clean-install installs runtime deps only"
+	rm -rf "$(dirname "$tgt")"
+}
+
+# --- Test 16: shell profile has an opt-in integration lane (#43) -------------
+# Integration bats live in tests/integration/ (seeded, .gitkeep). Default
+# `bats tests/` is non-recursive and skips them; --integration runs them too.
+test_shell_integration_lane() {
+	start "shell profile: tests/integration/ lane + --integration flag"
+	local tgt; tgt="$(mktemp -d)/proj"
+	scaffold_sample "$tgt" >/dev/null 2>&1
+	assert_exists "$tgt/tests/integration/.gitkeep" "tests/integration/ is seeded"
+	assert_contains "$tgt/test.sh" "--integration" "test.sh accepts an --integration flag"
+	assert_contains "$tgt/test.sh" "tests/integration" "test.sh knows the integration dir"
+	rm -rf "$(dirname "$tgt")"
+}
+
+# --- Test 17: pre-push runs the integration lane locally (#43) ---------------
+# The lane's home is local: the pre-push hook runs the full lane before a push.
+test_prepush_runs_integration() {
+	start "pre-push hook runs ./test.sh --integration"
+	local tgt; tgt="$(mktemp -d)/proj"
+	scaffold_sample "$tgt" >/dev/null 2>&1
+	assert_contains "$tgt/hooks/pre-push" "test.sh --integration" "pre-push runs the integration lane"
+	rm -rf "$(dirname "$tgt")"
+}
+
+# --- Test 18: README documents run-once onboarding + integration lane (#43) --
+test_readme_run_once() {
+	start "README documents 'run it once' and the integration lane"
+	local tgt; tgt="$(mktemp -d)/proj"
+	scaffold_sample "$tgt" >/dev/null 2>&1
+	assert_contains "$tgt/README.md" "run it once" "README has a fresh-clone run-once step"
+	assert_contains "$tgt/README.md" "./test.sh --integration" "README documents the integration lane"
+	rm -rf "$(dirname "$tgt")"
+}
+
 echo "Running scaffold tests against: $SCAFFOLD"
 echo
 test_core_files
@@ -347,6 +406,11 @@ test_frontend_profile_files
 test_frontend_node_guard
 test_setup_deps_frontend
 test_frontend_generated_shellcheck
+test_python_integration_lane
+test_python_clean_install_ci
+test_shell_integration_lane
+test_prepush_runs_integration
+test_readme_run_once
 echo
 printf 'Results: %d passed, %d failed\n' "$PASS" "$FAIL"
 [[ "$FAIL" -eq 0 ]]

@@ -31,3 +31,6 @@ select = ["E", "F", "I", "UP", "B"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["src"]
+markers = [
+    "integration: real-boundary test (a live service, secrets, a GPU). Opt-in — excluded from the default run; run it with ./test.sh --integration. Self-skip when the boundary is absent so the local pre-push lane stays non-blocking.",
+]
