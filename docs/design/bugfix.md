@@ -2,7 +2,7 @@
 
 Fix a bug in an **existing** SDLC repo through the gated, human-in-the-loop
 workflow. Tracks Issue #14. Built by `/feature` (prose path), so it is a sibling
-of `/feature` and reuses the same 9-gate skeleton and the `sdlc-common` rulebook.
+of `/feature` and reuses the same 10-gate skeleton and the `sdlc-common` rulebook.
 
 ## Why a separate command
 
@@ -51,22 +51,32 @@ Bug fixes branch **`fix/<slug>`** (not `feature/<slug>`), per `sdlc-common` §2.
   implements under Full. Patching a design flaw at function scope is a bandaid.
 - **Security flaw → exploit-first, root-cause-by-class.** The reproducing test is
   an exploit/regression test; the fix addresses the **input class**, not the one
-  payload; Gate 5 adds a security-review pass.
+  payload; the code-review gate (Gate 6) adds a security-review pass.
 
 ## Gate sequence
 
-Same 9 gates as `/feature`, with three deltas:
+Same 10 gates as `/feature`, with three deltas:
 
 ```
 CLASSIFY   — tier ladder w/ explicit Full triggers; path; branch fix/<slug>
-REPRODUCE  — exact repro + root-cause hypothesis; design-flaw & security escalation
-& DIAGNOSE
+REPRODUCE  — exact repro + root-cause hypothesis; design-flaw & security escalation;
+& DIAGNOSE   boundary inventory (a mocked boundary is often why the bug shipped)
 DESIGN     — brief; confirm the fix targets the root cause
 IMPLEMENT  — code: failing repro test → red → root-cause fix → green → keep test
              prose: correct the root of the confusion → re-verify
+VERIFY     — drive the real flow; confirm the reported symptom is actually gone;
+             exercise each boundary un-mocked (Definition of Done)
 CODE REVIEW— two-pass; confirm root cause closed, no regressions (+security @Full)
 REVIEW GUIDE → HUMAN REVIEW → COMMIT & PUSH → CLOSE OUT (retro @Full)
 ```
+
+## Why VERIFY matters most for a bug fix (#42)
+
+A bug that reached production usually did so *because* its boundary was mocked —
+the green regression test can repeat that mistake. VERIFY re-observes the **real
+reported symptom** on the real flow, not just a green test, so a fix that only
+satisfies a mock cannot be called Done. See `sdlc-common` §3 (mock-obligation)
+and §5 (Definition of Done); shared spine with the `/feature` VERIFY gate.
 
 ## Relationship to the `fix-shell-bug` skill
 

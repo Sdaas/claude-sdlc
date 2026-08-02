@@ -25,7 +25,7 @@ LAYER 1 · ENTRY COMMANDS (global, ~/.claude/commands)
    → classify work, pick a TIER, walk the gates
         │ drives
 LAYER 2 · GATES (reusable, stack-agnostic skills)
-   interview → design → design-review → plan → plan-review → tdd →
+   interview → design → design-review → plan → plan-review → tdd → verify →
    code-review(2-pass) → security-review → review-guide →
    HUMAN REVIEW (approval gate) → commit → pre-push → ci-monitor → retrospective
         │ calls into
@@ -40,7 +40,7 @@ LAYER 3 · STACK PROFILES (the concrete "how")
 | Tier | Branch | Gate path |
 |---|---|---|
 | **Quick** | **main** | classify → surgical change → verify → commit |
-| **Standard** | own branch | interview(light) → design(brief) → tdd → code-review → review-guide → **human review** → commit → pre-push |
+| **Standard** | own branch | interview(light) → design(brief) → tdd → verify → code-review → review-guide → **human review** → commit → pre-push |
 | **Full** | own branch | every gate incl. design-review, plan-review, security-review, deploy(±brew), retrospective |
 
 Even at **Quick** tier, the surgical change is shown to the human before it is
@@ -102,6 +102,19 @@ The orchestrator proposes a tier at CLASSIFY; the human confirms or overrides.
    resuming the owning command at its gate, or the next backlog item — advisory,
    never auto-acting. `PROGRESS.md` remains the *durable* between-work cursor.
    Named `/sdlc-resume` (not `/resume`) to avoid Claude Code's built-in. (#19)
+8. **Done = green tests AND observed real behavior (#42).** Hermetic tests are
+   necessary, not sufficient — a red written against a **mock** goes green when
+   the mock is satisfied, proving only the mock. A first-class **VERIFY** gate in
+   `/feature` and `/bugfix` (after IMPLEMENT, before code review) drives the real
+   user-facing flow and exercises **every external boundary un-mocked once**.
+   Mocking a boundary **obligates ≥1 non-mocked** (real/contract) test there,
+   kept **opt-in/skippable** so PR CI needs no secrets/GPUs; Done is enforced by
+   the VERIFY observation + that test's existence, not by blocking CI. VERIFY is
+   skippable — with a stated reason — only when there is no runtime surface to
+   drive. Retro-born from medical-ocr#7, where fully-green hermetic tests hid a
+   missing runtime dependency and a truncation default. The rule lives once in
+   `sdlc-common` (§3 mock-obligation, §4 checklist, §5 Definition of Done) and is
+   walked by both commands.
 
 ## Backlog, branching, CI, and review guide
 

@@ -37,10 +37,17 @@ handling, constraints (security/performance/scale), and **acceptance criteria**
 ("done when…"). For a prose change, pin down intent, scope, and audience.
 Do not assume — ask. Summarize back and confirm.
 
+**Boundary inventory.** Enumerate the external boundaries this feature touches —
+network services, subprocesses/CLIs, the filesystem, runtime dependencies, and
+any user-facing entry point. This list drives the VERIFY gate (Gate 5) and the
+mock-obligation rule (`sdlc-common` §3). If there are none, say so.
+
 ## Gate 3 — DESIGN (brief)
 
 State the approach and any alternatives considered. Record only the **key**
-decisions into `design/overview.md` (curated). Present it; get agreement.
+decisions into `design/overview.md` (curated). For each boundary from the Gate 2
+inventory, state **how it will be really exercised** (the non-mocked test and the
+VERIFY step). Present it; get agreement.
 (Full tier: run a design-review pass before proceeding.)
 
 ## Gate 4 — IMPLEMENT
@@ -57,29 +64,45 @@ decisions into `design/overview.md` (curated). Present it; get agreement.
 1. Draft the artifact.
 2. Self-check against the `sdlc-common` §4 prose checklist.
 
-## Gate 5 — CODE REVIEW
+## Gate 5 — VERIFY (observe the real thing)
+
+Green tests are not Done (`sdlc-common` §5). Drive the **real** user-facing flow
+once and confirm **each Gate 2 acceptance criterion** against observed behavior
+(use the `verify` / `run` skills). For **every external boundary** in the Gate 2/3
+inventory, exercise it **un-mocked** at least once — a mocked test only proved the
+mock.
+
+- **Required** when the change touches an external service/dependency or a
+  user-facing entry point.
+- **Skippable only** for a pure-internal or prose change with no runtime surface
+  ("nothing to drive") — and then you must **state the one-line reason** for
+  skipping (e.g. "no runtime surface: prose-only change").
+
+Not Done until this passes. If VERIFY surfaces a defect, go back to IMPLEMENT.
+
+## Gate 6 — CODE REVIEW
 
 Two-pass review of the change (prose: checklist review). Fix findings.
 (Full tier: also a security-review pass.)
 
-## Gate 6 — REVIEW GUIDE
+## Gate 7 — REVIEW GUIDE
 
 Present the changed files, a recommended review order, and one line per file on
 why it matters / where the key change is.
 
-## Gate 7 — HUMAN REVIEW (approval gate — rule #10)
+## Gate 8 — HUMAN REVIEW (approval gate — rule #10)
 
 Wait for the developer to review and approve. Do not proceed to commit until
 approved. Address any requested changes and re-present.
 
-## Gate 8 — COMMIT & PUSH
+## Gate 9 — COMMIT & PUSH
 
 After approval:
 - Commit with a clear message referencing the issue.
 - Push. The pre-push hook runs `./test.sh`; it must pass.
 - Open a PR if the repo uses them; merge only with green CI and approval.
 
-## Gate 9 — CLOSE OUT
+## Gate 10 — CLOSE OUT
 
 - Close (or update) the GitHub issue.
 - Full tier: run a short retrospective (`/retrospective`) and record lessons.
@@ -91,4 +114,7 @@ After approval:
 - Review before commit (#10) — every tier, including Quick.
 - Trivial → `main`; everything else → its own branch.
 - Tests green before push and merge; all via `./test.sh`.
+- **Not Done on green tests alone** — VERIFY the real flow, and exercise every
+  external boundary un-mocked once (`sdlc-common` §3, §5). Skip only with a
+  stated reason when there's no runtime surface.
 - If the description is ambiguous, ask before starting — do not guess scope.

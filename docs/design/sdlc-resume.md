@@ -52,7 +52,7 @@ gated workflows and do not checkpoint.
    (when the workspace is a git repo); `gh issue list` + the in-flight issue;
    `PROGRESS.md` cursor.
 2. **Reconcile** — treat `SESSION_STATE.md` as a *hint*, git + issues as ground
-   truth; surface discrepancies (state says Gate 8 but no commits; branch is
+   truth; surface discrepancies (state says Gate 9 [COMMIT] but no commits; branch is
    `main`; issue already closed).
 3. **Propose one path** — resume the owning command at its recorded gate, or (if
    nothing is in flight) the next backlog item by the selection rule. Wait.
