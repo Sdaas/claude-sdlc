@@ -142,6 +142,24 @@ The orchestrator proposes a tier at CLASSIFY; the human confirms or overrides.
     already compliant). The rule now lives once, durably, in `sdlc-common` §8,
     so any future command is named `sdlc-<name>` from its first draft rather
     than renamed after a collision.
+11. **Harden = language-agnostic orchestrator + profile-delegated checklist
+    (#25).** `/sdlc-harden` brings an existing repo (built outside the SDLC, or
+    left behind as it evolved) up to standard via a **gap analysis**: audit
+    against the standards checklist → **categorized report** (four areas ×
+    three risk classes: infra-doc / behavior-preserving / behavior-changing) →
+    human prioritizes each gap (close / defer / drop) → close. Two knobs, kept
+    distinct: **mode** (audit default = infra + report only; apply opt-in = also
+    change logic) and **tier** (how much process). The **cardinal rule** —
+    never refactor untested code — pins behavior with characterization tests
+    before any behavior-touching fix. **Close is hybrid:** infra/doc/
+    behavior-preserving gaps are fixed in-harden (one category at a time under a
+    green `./test.sh`); behavior/logic gaps **escalate** to `/sdlc-feature` or
+    `/sdlc-bugfix` as filed issues. **Backlog: report-first** — file issues only
+    for the agreed close + defer set, never one per raw gap. The **stack-specific
+    checklist is delegated to the profile**; for **shell** it reuses the existing
+    `harden-shell-repo` skill (folding that into `profile-shell` is deferred to
+    #21). The workflow lives in a `sdlc-harden` skill; the command is a thin
+    gate-walker. Generalizes `harden-shell-repo` from shell to all profiles.
 
 ## Backlog, branching, CI, and review guide
 

@@ -53,8 +53,8 @@ All depend on **#12** (`/sdlc-feature`). Parallelizable once it exists:
 ## Phase 4 — refactor, adopt, migrate
 
 ```
-#20 /sdlc-harden           (depends on #12)
-#11 extract orchestrator  (depends on #14, #20 — only once multiple callers exist)
+#25 /sdlc-harden           (depends on #12) — gap analysis; #20 folded in as dup
+#11 extract orchestrator  (depends on #14, #25 — only once multiple callers exist)
 #4  extract gate skills   (tech-debt; after the embedded version proves out)
 #21 migrate global shell skills into profile-shell
 #22 model/token optimization
