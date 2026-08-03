@@ -1,5 +1,19 @@
 // {{NAME}} — {{PURPOSE}}
 
+// --- Logging (see design/overview.md) ---------------------------------------
+// Leveled logging to the browser console — the webapp analogue of logging to
+// stderr. Two levels the user selects: INFO (default) and DEBUG (verbose);
+// ERROR is always emitted. Each line is prefixed "<ISO-8601 UTC> <LEVEL>
+// {{NAME}}:"; console.error also prints the Error object (with its stack).
+export const log = {
+  debug: (msg: string): void =>
+    console.debug(`${new Date().toISOString()} DEBUG {{NAME}}: ${msg}`),
+  info: (msg: string): void =>
+    console.info(`${new Date().toISOString()} INFO {{NAME}}: ${msg}`),
+  error: (msg: string, err?: unknown): void =>
+    console.error(`${new Date().toISOString()} ERROR {{NAME}}: ${msg}`, err),
+};
+
 /** The greeting the app renders. Exported as a pure function so it is unit-testable. */
 export function greeting(name: string): string {
   return `Hello from ${name}.`;
@@ -12,5 +26,11 @@ const app =
     ? document.querySelector<HTMLDivElement>("#app")
     : null;
 if (app) {
-  app.textContent = greeting("{{NAME}}");
+  try {
+    log.info("Rendering {{NAME}}.");
+    app.textContent = greeting("{{NAME}}");
+    log.debug("Render complete.");
+  } catch (err) {
+    log.error("Failed to render {{NAME}}.", err);
+  }
 }

@@ -3,21 +3,54 @@
 from __future__ import annotations
 
 import argparse
+import logging
 import sys
+import time
+
+# --- Logging (see design/overview.md) ---------------------------------------
+# Leveled logging to stderr so stdout carries only real output/data. Two levels
+# the user selects: INFO (default) and DEBUG (via --verbose); ERROR is always
+# emitted. Timestamps are ISO-8601 UTC. Any unhandled exception is logged at
+# ERROR with the FULL traceback.
+logger = logging.getLogger("{{NAME}}")
+
+
+def _configure_logging(verbose: bool) -> None:
+    logging.Formatter.converter = time.gmtime  # UTC timestamps
+    logging.basicConfig(
+        level=logging.DEBUG if verbose else logging.INFO,
+        stream=sys.stderr,
+        format="%(asctime)s %(levelname)s %(name)s: %(message)s",
+        datefmt="%Y-%m-%dT%H:%M:%SZ",
+    )
 
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="{{NAME}}", description="{{PURPOSE}}")
-    parser.add_argument("-v", "--verbose", action="store_true", help="verbose output")
+    parser.add_argument(
+        "-v", "--verbose", action="store_true", help="verbose (debug) logging"
+    )
     return parser
+
+
+def run(args: argparse.Namespace) -> int:
+    """The actual work: log progress at INFO, detail at DEBUG, data to stdout."""
+    logger.info("Starting {{NAME}}.")
+    logger.debug("Parsed arguments: %s", args)
+    print("Hello from {{NAME}}.")  # real output/data -> stdout
+    logger.info("Done.")
+    return 0
 
 
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
-    if args.verbose:
-        print("{{NAME}}: verbose mode on", file=sys.stderr)
-    print("Hello from {{NAME}}.")
-    return 0
+    _configure_logging(args.verbose)
+    try:
+        return run(args)
+    except Exception:
+        # Top-level guard: log the full traceback at ERROR, exit non-zero.
+        logger.error("{{NAME}} failed with an unhandled exception.", exc_info=True)
+        return 1
 
 
 if __name__ == "__main__":

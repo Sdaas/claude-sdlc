@@ -37,6 +37,12 @@ holds the roadmap + dependency order; `docs/design/` holds the architecture.
   to `/sdlc-feature`, `/sdlc-bugfix`, and `sdlc-common` (retro-born from medical-ocr#7:
   hermetic green ≠ Done when a boundary is mocked). Full tier, prose. Merged
   (PR #44); applied to `~/.claude` (git_sha 8c0b2d9). Gates renumbered 5→10.
+- **#24 shipped (logging policy).** `docs/design/logging-policy.md` +
+  leveled logging baked into all 3 entry templates (shell/python/frontend):
+  INFO default, DEBUG via `--verbose`, ERROR always; logs→stderr, data→stdout;
+  ISO-8601 UTC `<ts> <LEVEL> <name>: <msg>`; full trace on error (shell
+  best-effort/cross-shell). Standard tier, mixed path; VERIFY observed on real
+  scaffolds. PR TBD.
 - **NEXT ACTION:** proof-run `/sdlc-discovery` on a real concept (retro cuts #32 v2);
   then remaining Phase 3: #15 deploy(brew), #16 profile-sql, #18 /sdlc-retrospective.
 - **Graduation:** need ~3–4 clean `/sdlc-feature` runs + no process gaps in retros

@@ -7,7 +7,24 @@
 
 set -eu
 
-VERBOSE=0
+# --- Logging (see design/overview.md) ---------------------------------------
+# Leveled logging to STDERR so stdout carries only real output/data. Two levels
+# the user selects: INFO (default) and DEBUG (via --verbose); ERROR is always
+# emitted. Each line is "<ISO-8601 UTC> <LEVEL> {{NAME}}: <message>".
+LOG_LEVEL=INFO
+
+log() { # log LEVEL message...
+	level="$1"
+	shift
+	# DEBUG lines only appear when the user asked for --verbose.
+	if [ "$level" = DEBUG ] && [ "$LOG_LEVEL" != DEBUG ]; then
+		return 0
+	fi
+	printf '%s %s {{NAME}}: %s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$level" "$*" >&2
+}
+log_debug() { log DEBUG "$@"; }
+log_info() { log INFO "$@"; }
+log_error() { log ERROR "$@"; }
 
 usage() {
 	cat <<EOF
@@ -25,10 +42,10 @@ main() {
 			return 0
 			;;
 		-v | --verbose)
-			VERBOSE=1
+			LOG_LEVEL=DEBUG
 			;;
 		*)
-			echo "{{NAME}}: unknown argument: $1" >&2
+			log_error "unknown argument: $1"
 			usage >&2
 			return 2
 			;;
@@ -36,11 +53,13 @@ main() {
 		shift
 	done
 
-	if [ "$VERBOSE" -eq 1 ]; then
-		echo "{{NAME}}: verbose mode on" >&2
-	fi
+	log_info "Starting {{NAME}}."
+	log_debug "Log level: $LOG_LEVEL"
 
+	# Real output/data goes to stdout; progress/diagnostics go to stderr above.
 	echo "Hello from {{NAME}}."
+
+	log_info "Done."
 }
 
 main "$@"
