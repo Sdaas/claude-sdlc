@@ -387,6 +387,51 @@ test_readme_run_once() {
 	rm -rf "$(dirname "$tgt")"
 }
 
+# --- Test 19: shell entry point follows the logging policy (#24) -------------
+# Leveled logging: log_debug/log_info/log_error helpers, timestamp+LEVEL prefix,
+# all to stderr; DEBUG gated behind --verbose (default INFO).
+test_shell_logging_policy() {
+	start "shell profile bin/<tool> has leveled logging (info/debug/error, stderr, --verbose=debug)"
+	local tgt; tgt="$(mktemp -d)/proj"
+	scaffold_sample "$tgt" >/dev/null 2>&1
+	assert_contains "$tgt/bin/widgetron" "log_info" "defines log_info"
+	assert_contains "$tgt/bin/widgetron" "log_debug" "defines log_debug"
+	assert_contains "$tgt/bin/widgetron" "log_error" "defines log_error"
+	assert_contains "$tgt/bin/widgetron" "date -u" "timestamps with UTC date"
+	assert_contains "$tgt/bin/widgetron" "LOG_LEVEL" "tracks a log level"
+	assert_absent_str "$tgt/bin/widgetron" "{{" "no leftover placeholders in tool"
+	rm -rf "$(dirname "$tgt")"
+}
+
+# --- Test 20: python entry point follows the logging policy (#24) ------------
+# Uses stdlib logging to stderr with timestamp+level; --verbose => DEBUG; any
+# exception is logged at ERROR with the FULL traceback.
+test_python_logging_policy() {
+	start "python profile cli.py has leveled logging (stderr, --verbose=debug, full traceback)"
+	local tgt; tgt="$(mktemp -d)/proj"
+	scaffold_py "$tgt" >/dev/null 2>&1
+	assert_contains "$tgt/src/my_tool/cli.py" "import logging" "imports logging"
+	assert_contains "$tgt/src/my_tool/cli.py" "logging.DEBUG" "maps --verbose to DEBUG"
+	assert_contains "$tgt/src/my_tool/cli.py" "stderr" "logs to stderr"
+	assert_contains "$tgt/src/my_tool/cli.py" "exc_info" "logs full traceback on error"
+	assert_absent_str "$tgt/src/my_tool/cli.py" "{{" "no leftover placeholders in cli.py"
+	rm -rf "$(dirname "$tgt")"
+}
+
+# --- Test 21: frontend entry point follows the logging policy (#24) ----------
+# A tiny log helper maps debug/info/error onto console.debug/info/error with a
+# timestamp+level prefix (the browser-console analogue of stderr).
+test_frontend_logging_policy() {
+	start "frontend profile main.ts has leveled logging (console debug/info/error)"
+	local tgt; tgt="$(mktemp -d)/proj"
+	scaffold_fe "$tgt" >/dev/null 2>&1
+	assert_contains "$tgt/src/main.ts" "console.debug" "uses console.debug for DEBUG"
+	assert_contains "$tgt/src/main.ts" "console.info" "uses console.info for INFO"
+	assert_contains "$tgt/src/main.ts" "console.error" "uses console.error for ERROR"
+	assert_absent_str "$tgt/src/main.ts" "{{" "no leftover placeholders in main.ts"
+	rm -rf "$(dirname "$tgt")"
+}
+
 echo "Running scaffold tests against: $SCAFFOLD"
 echo
 test_core_files
@@ -411,6 +456,9 @@ test_python_clean_install_ci
 test_shell_integration_lane
 test_prepush_runs_integration
 test_readme_run_once
+test_shell_logging_policy
+test_python_logging_policy
+test_frontend_logging_policy
 echo
 printf 'Results: %d passed, %d failed\n' "$PASS" "$FAIL"
 [[ "$FAIL" -eq 0 ]]

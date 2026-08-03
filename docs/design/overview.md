@@ -192,6 +192,11 @@ The orchestrator proposes a tier at CLASSIFY; the human confirms or overrides.
   Kept framework-neutral so the profile is a reusable base, not a commitment to
   React for every front-end project.
 
+All three profiles follow one **[logging policy](logging-policy.md)** (#24):
+leveled logging (INFO default, DEBUG via `--verbose`, ERROR always) to stderr —
+stdout stays data-only — with ISO-8601 UTC timestamps. The entry-point templates
+demonstrate it, so every scaffolded project is born compliant.
+
 ## Out of scope (for now)
 
 - Model/token-usage optimization (deferred).

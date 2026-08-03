@@ -16,6 +16,9 @@ _TBD — established during the first `/sdlc-feature` design gate._
 
 <!-- One bullet per KEY decision, with a one-line rationale. Not every decision. -->
 - Stack profile: {{PROFILE}} ({{ARCHETYPE}}); distribution: {{DISTRIBUTION}}.
+- Logging: leveled logging — INFO (default) and DEBUG (via `--verbose`), ERROR
+  always — to **stderr** (stdout stays data-only), ISO-8601 UTC timestamps. The
+  entry point ships with `log_*` / `logging` / `console` helpers demonstrating it.
 
 ## Constraints
 
