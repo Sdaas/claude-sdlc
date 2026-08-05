@@ -60,10 +60,12 @@ holds the roadmap + dependency order; `docs/design/` holds the architecture.
   drift** — rules copy-pasted across commands, cited by fragile `§N`/`#N`
   numbers, and paths asserted in prose that nothing checks. 16 issues filed
   (#52–#67); sequencing + tier/command assignments in `PLAN.md` Phase 5.
-- **NEXT ACTION:** Phase 5b — #52 (`--license apache`, the one shipped user-facing
-  bug) via `/sdlc-bugfix`, then #53's path/template integrity checks. Still owed
-  from Phase 3: proof-run `/sdlc-discovery` on a real concept (retro cuts #32 v2);
-  #15 deploy(brew), #16 profile-sql.
+- **#52 shipped** (PR #70) — see the session log. Phase 5b continues.
+- **NEXT ACTION:** **#53** — the docs-consistency test (prefix / skill-exists /
+  cross-ref + the widened path & template integrity checks). Then #58 and #56,
+  which the same check turns red. Still owed from Phase 3: proof-run
+  `/sdlc-discovery` on a real concept (retro cuts #32 v2); #15 deploy(brew),
+  #16 profile-sql.
 - **Graduation:** need ~3–4 clean `/sdlc-feature` runs + no process gaps in retros
   before using the SDLC on OTHER repos (see memory `sdlc-self-hosting`).
 - **Process reminder:** never commit/push before human review + approval (rule #10).
@@ -115,6 +117,33 @@ Newest first. One short entry per working session.
 - **Process note:** the #24 retro proved that writing a durable doc does not make
   a lesson durable. Harvesting does. That is the whole of #68.
 - Next: #52 via `/sdlc-bugfix`, then #53.
+
+### 2026-08-05 — Session 2 (cont.) — Phase 5b begins
+- **Shipped #52** via `/sdlc-bugfix` (Standard, code path) — merged (PR #70, CI
+  green). `--license apache` died because line 198 special-cased it to
+  `apache-2.0.tmpl`, a name matching no option value; every other license
+  resolved by convention, so the one path that escaped the convention was the
+  one that broke. Fixed both the missing template **and** the special case.
+- **Reproducing found a second, worse defect the issue never mentioned:** the
+  failure wasn't clean — validation ran after ~190 lines of writes, so a bad
+  `--license`/`--profile` left a **partial scaffold** (10 files vs 16). Options
+  are now validated before the first `mkdir`. This is the concrete payoff of
+  Gate 2: reading the code shows the error, only *running* it shows the debris.
+- **Apache-2.0 text was fetched from apache.org, not written from memory** — it
+  is a legal document, and `diff` against the canonical source shows exactly one
+  changed line (the appendix boilerplate → `{{YEAR}}/{{AUTHOR}}`). Worth keeping
+  as the convention for any future license template.
+- **VERIFY exercised the delivery boundary**, not just the scaffolder: ran
+  `apply.sh` into a throwaway target and re-ran the scaffolder from the
+  *installed* copy. A shipped template that doesn't ship isn't fixed.
+- Filed **#71** (a test helper passing vacuously on a missing file — caught
+  because the red run printed `ok` for a `LICENSE` that did not exist) and
+  **#72** (payload-integrity checks still validate mid-scaffold). Neither folded
+  into the bugfix diff.
+- **First `/sdlc-bugfix` run on this repo.** No process gaps; the reproduce-first
+  gate earned its place. Counts toward graduation.
+- Next: **#53** — the docs-consistency test, still the highest-leverage item in
+  Phase 5 (#52/#56/#58 are all one dangling-path defect).
 
 ### 2026-08-02 — Session 1 (cont. 10)
 - **Shipped #42** via `/sdlc-feature` (prose, **Full tier**): a **VERIFY gate** ("observe
