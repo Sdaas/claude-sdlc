@@ -56,6 +56,8 @@ The SDLC exposes a small set of commands (installed into `~/.claude/commands`):
 
 | Command | Purpose |
 |---|---|
+| `/sdlc-discovery` | Turn a fuzzy concept into gated requirements (concept brief, use cases). |
+| `/sdlc-architecture` | Turn requirements into a structured, sequenced plan (architecture + decision records, feature backlog). |
 | `/sdlc-newproject` | Start a new repo — interview, then scaffold README, `design/`, `test.sh`, `release.sh`, hooks, and CI. |
 | `/sdlc-feature` | Add a feature to an existing SDLC repo. |
 | `/sdlc-bugfix` | Fix a bug (a failing test reproduces it first). |

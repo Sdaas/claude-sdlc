@@ -169,6 +169,22 @@ The orchestrator proposes a tier at CLASSIFY; the human confirms or overrides.
     required-argument checks, **before the first `mkdir`**, so a bad value is a
     clean exit instead of a half-built project the user must delete by hand. (#52)
 
+13. **The payload prose is a tested artifact, not just reviewed prose.**
+    The product is markdown — 10 commands and 6 skills cross-referencing each
+    other by command name, skill name, template path, and repo path — and
+    review alone had already missed two drifts (the `5→10` gate renumber; the
+    `/help` and `/verify` collisions). `tests/test_docs.sh` runs in `./test.sh`,
+    so pre-push and CI enforce it. Each check is a **function taking a root
+    directory**, so the suite points it at deliberately-broken fixtures and
+    proves the check bites rather than merely passing. Precision is the design
+    constraint: a linter that cries wolf gets disabled, so references are matched
+    only inside **backticks** (bare-word matching hits `./test.sh` → `/test`),
+    paths are resolved **skill-relative** where the prose is skill-local, and
+    payload prose describing a **target repo** (`design/`, `docs/retrospectives/`)
+    is deliberately out of scope — it must not be resolved against this repo.
+    Known-external names (Claude Code built-ins, global skills) and filed drift
+    live in short, issue-annotated allowlists. (#53)
+
 ## Backlog, branching, CI, and review guide
 
 6. **GitHub Issues are the backlog.** Feature requests and bug reports live as
