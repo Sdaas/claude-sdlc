@@ -60,7 +60,7 @@ holds the roadmap + dependency order; `docs/design/` holds the architecture.
   drift** — rules copy-pasted across commands, cited by fragile `§N`/`#N`
   numbers, and paths asserted in prose that nothing checks. 16 issues filed
   (#52–#67); sequencing + tier/command assignments in `PLAN.md` Phase 5.
-- **#52 shipped** (PR #70) — see the session log. Phase 5b continues.
+- **#52 and #71 shipped** (PRs #70, #73) — see the session log. Phase 5b continues.
 - **NEXT ACTION:** **#53** — the docs-consistency test (prefix / skill-exists /
   cross-ref + the widened path & template integrity checks). Then #58 and #56,
   which the same check turns red. Still owed from Phase 3: proof-run
@@ -142,6 +142,22 @@ Newest first. One short entry per working session.
   into the bugfix diff.
 - **First `/sdlc-bugfix` run on this repo.** No process gaps; the reproduce-first
   gate earned its place. Counts toward graduation.
+- **Shipped #71** via `/sdlc-bugfix` (Standard, code path) — merged (PR #73).
+  `assert_absent_str` cat'd a missing file, got empty, found the needle trivially
+  absent, and **passed** — reporting ok for a file that was never written.
+- **The issue's DoD was factually wrong**, and finding out cost nothing because
+  the fix was applied test-first: it claimed no call site relied on the vacuous
+  pass; **five did**, and hardening the helper alone turned exactly those five
+  red. All five asserted *file absence* via a string check — e.g. "no shell bin/
+  for python profile" only checked that `bin/my-tool` lacked the word "usage".
+  Converted to `assert_absent`, which is strictly stronger. A correction is
+  posted on #71 so the issue isn't left as a misleading record.
+- **Pattern across both of today's bugfixes:** the filed issue understated the
+  real scope, and *reproducing* rather than reading is what exposed it (#52: the
+  failure also left a half-built repo; #71: four sibling assertions were hollow).
+  **Issue DoDs written from a review are hypotheses, not specifications** —
+  verify them against the code before treating them as the contract. Candidate
+  rule for `sdlc-common`; see #69, which is the same shape.
 - Next: **#53** — the docs-consistency test, still the highest-leverage item in
   Phase 5 (#52/#56/#58 are all one dangling-path defect).
 
