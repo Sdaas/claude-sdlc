@@ -18,7 +18,7 @@ It supports multiple stacks (shell, Python, SQL, front-end) via pluggable
 **profiles**, and scales effort to the task via a **tier dial** (Quick /
 Standard / Full).
 
-See [`docs/design/overview.md`](docs/design/overview.md) for the architecture,
+See [`design/overview.md`](design/overview.md) for the architecture,
 [`PLAN.md`](PLAN.md) for the build plan, and [`PROGRESS.md`](PROGRESS.md) for
 live status.
 
@@ -111,8 +111,7 @@ payload/              What gets installed
   commands/           Slash commands
   skills/             Gate skills + stack profiles
 tests/                Tests for this repo's own tooling
-docs/design/          Curated design of the SDLC itself
-templates/            Per-repo artifact templates (scaffolded by /sdlc-newproject)
+design/               Curated design of the SDLC itself (dogfoods the root-design/ rule)
 PLAN.md, PROGRESS.md  Build plan and cross-session tracker
 ```
 

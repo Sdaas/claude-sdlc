@@ -3,7 +3,7 @@
 The live **cursor** for building this SDLC across sessions. **Read this first
 when resuming.** The backlog itself lives in **GitHub Issues** (see the
 [board](https://github.com/Sdaas/claude-sdlc/issues) and milestones); `PLAN.md`
-holds the roadmap + dependency order; `docs/design/` holds the architecture.
+holds the roadmap + dependency order; `design/` holds the architecture.
 
 ---
 
@@ -37,7 +37,7 @@ holds the roadmap + dependency order; `docs/design/` holds the architecture.
   to `/sdlc-feature`, `/sdlc-bugfix`, and `sdlc-common` (retro-born from medical-ocr#7:
   hermetic green ≠ Done when a boundary is mocked). Full tier, prose. Merged
   (PR #44); applied to `~/.claude` (git_sha 8c0b2d9). Gates renumbered 5→10.
-- **#24 shipped (logging policy).** `docs/design/logging-policy.md` +
+- **#24 shipped (logging policy).** `design/logging-policy.md` +
   leveled logging baked into all 3 entry templates (shell/python/frontend):
   INFO default, DEBUG via `--verbose`, ERROR always; logs→stderr, data→stdout;
   ISO-8601 UTC `<ts> <LEVEL> <name>: <msg>`; full trace on error (shell
@@ -110,7 +110,7 @@ Newest first. One short entry per working session.
   (`fix/<slug>`; failing test reproduces the bug → red → root-cause fix → green →
   regression test stays). Code + prose paths; Full-tier ladder
   (security/design/shipped/high-risk); design-flaw → `/sdlc-architecture` escalation;
-  security bug → exploit-first + security-review. Command + `docs/design/sdlc-bugfix.md`.
+  security bug → exploit-first + security-review. Command + `design/sdlc-bugfix.md`.
   Merged (PR #40).
 - **Built #19 `/sdlc-resume`** via `/sdlc-feature` (prose path): (A) a read-only
   resume command + (B) a `SESSION_STATE.md` checkpoint contract in `sdlc-common`
@@ -138,7 +138,7 @@ Newest first. One short entry per working session.
   path). New `sdlc-discovery` skill (gate defs, human-prose-vs-AI-distillation
   provenance rule, traceability rule, both gate sequences) + 4 templates (concept,
   use-cases, ADR decision, feature backlog) + two thin command gate-walkers +
-  `docs/design/sdlc-discovery-architecture.md` + overview updates. Motivated by a real
+  `design/sdlc-discovery-architecture.md` + overview updates. Motivated by a real
   256-page ChatGPT product-build thread whose failure mode was big-picture-in-
   scrollback + reactive architecture + vibes validation. Tests green (145);
   apply.sh dry-run registers all 7 files. Merged (PR #33).

@@ -92,10 +92,11 @@ The orchestrator proposes a tier at CLASSIFY; the human confirms or overrides.
 4. **All testing and release run through shell scripts** (`test.sh`,
    `release.sh`) that the developer can invoke directly. Gates *call* these
    scripts rather than inventing ad-hoc commands.
-5. **Every repo carries its design.** A curated `design/` (end-to-end design +
-   **key** decisions only) plus a 6-section `README`
+5. **Every repo carries its design.** A curated `design/` at the repo **root**
+   (end-to-end design + **key** decisions only) plus a 6-section `README`
    (Purpose · Quick Start · User Guide · Developer Guide · Automated Testing
-   Guide · Release Process).
+   Guide · Release Process). This repo dogfoods the rule — its design lives at
+   root `design/`, enforced by `tests/test_dogfood.sh` (#56).
 6. **`setup.sh` separates *install* from *readiness*.** The install check
    (`command -v`) runs for **all** deps, always. Additional per-dep readiness
    checks — declared in a `CHECKS` table as `command|type|spec…` — run only for
