@@ -28,9 +28,17 @@ assert_contains() {
 	got="$(cat "$1" 2>/dev/null || true)"
 	if [[ "$got" == *"$2"* ]]; then pass "$3"; else fail "file $1 missing [$2] — $3"; fi
 }
+# "this file exists and does NOT contain X". A missing file is a failure, not a
+# pass — otherwise `cat` on nothing yields nothing, the needle is trivially
+# absent, and the assertion reports ok for a file that was never written (#71).
+# To assert a file is absent entirely, use assert_absent.
 assert_absent_str() {
 	local got
-	got="$(cat "$1" 2>/dev/null || true)"
+	if [[ ! -f "$1" ]]; then
+		fail "file does not exist: $1 — $3"
+		return
+	fi
+	got="$(cat "$1")"
 	if [[ "$got" != *"$2"* ]]; then pass "$3"; else fail "file $1 still contains [$2] — $3"; fi
 }
 assert_absent() { if [[ ! -e "$1" ]]; then pass "$2"; else fail "should not exist: $1 — $2"; fi; }
@@ -116,7 +124,7 @@ test_nonempty_guard() {
 	printf 'mine\n' >"$tgt/existing.txt"
 	scaffold_sample "$tgt" >/dev/null 2>&1
 	assert_eq 1 "$?" "aborts non-zero on non-empty target"
-	assert_absent_str "$tgt/README.md" "widgetron" "nothing written (no README)"
+	assert_absent "$tgt/README.md" "nothing written (no README)"
 	scaffold_sample "$tgt" --force >/dev/null 2>&1
 	assert_eq 0 "$?" "--force proceeds"
 	assert_exists "$tgt/README.md" "README written with --force"
@@ -157,7 +165,7 @@ test_formula_conditional() {
 	assert_exists "$tgt/Formula/widgetron.rb" "brew: Formula present"
 	local tgt2; tgt2="$(mktemp -d)/proj"
 	scaffold_sample "$tgt2" --distribution none >/dev/null 2>&1
-	assert_absent_str "$tgt2/Formula/widgetron.rb" "class" "none: Formula absent"
+	assert_absent "$tgt2/Formula/widgetron.rb" "none: Formula absent"
 	rm -rf "$(dirname "$tgt")" "$(dirname "$tgt2")"
 }
 
@@ -204,7 +212,7 @@ test_python_profile_files() {
 	assert_absent_str "$tgt/pyproject.toml" "{{" "no leftover placeholders in pyproject"
 	assert_absent_str "$tgt/src/my_tool/cli.py" "{{" "no leftover placeholders in cli.py"
 	# python profile should NOT emit shell-only files
-	assert_absent_str "$tgt/bin/my-tool" "usage" "no shell bin/ for python profile"
+	assert_absent "$tgt/bin/my-tool" "no shell bin/ for python profile"
 	rm -rf "$(dirname "$tgt")"
 }
 
@@ -283,8 +291,8 @@ test_frontend_profile_files() {
 	assert_absent_str "$tgt/package.json" "{{" "no leftover placeholders in package.json"
 	assert_absent_str "$tgt/src/main.ts" "{{" "no leftover placeholders in main.ts"
 	# frontend profile should NOT emit shell- or python-only files
-	assert_absent_str "$tgt/bin/web-widget" "Usage" "no shell bin/ for frontend profile"
-	assert_absent_str "$tgt/pyproject.toml" "hatchling" "no pyproject for frontend profile"
+	assert_absent "$tgt/bin/web-widget" "no shell bin/ for frontend profile"
+	assert_absent "$tgt/pyproject.toml" "no pyproject for frontend profile"
 	rm -rf "$(dirname "$tgt")"
 }
 
@@ -434,6 +442,35 @@ test_frontend_logging_policy() {
 	rm -rf "$(dirname "$tgt")"
 }
 
+# --- Test-harness self-checks (#71) -----------------------------------------
+# The helpers are the safety net; a helper that passes on a file that isn't
+# there hands out confidence it has not earned. Probes run in a SUBSHELL so
+# their pass/fail output can be inspected without polluting the real counters.
+
+test_assert_absent_str_requires_the_file() {
+	start "assert_absent_str fails when the file does not exist"
+	local out
+	out="$(assert_absent_str "/nonexistent/definitely/not/here" "{{" "probe" 2>&1)"
+	if [[ "$out" == *FAIL* ]]; then
+		pass "a missing file is a failure, not a vacuous pass"
+	else
+		fail "reported [$out] for a file that does not exist"
+	fi
+}
+
+test_assert_absent_str_still_detects_content() {
+	start "assert_absent_str still distinguishes content in an existing file"
+	local f; f="$(mktemp)"
+	printf 'hello {{NAME}}\n' >"$f"
+	local out
+	out="$(assert_absent_str "$f" "{{" "probe" 2>&1)"
+	if [[ "$out" == *FAIL* ]]; then pass "fails when the needle IS present"; else fail "missed [{{] in $f"; fi
+	printf 'hello world\n' >"$f"
+	out="$(assert_absent_str "$f" "{{" "probe" 2>&1)"
+	if [[ "$out" != *FAIL* ]]; then pass "passes when the needle is absent"; else fail "false alarm on clean file"; fi
+	rm -f "$f"
+}
+
 # --- License matrix (#52) ---------------------------------------------------
 # Every license value the interview advertises must actually scaffold. `apache`
 # shipped broken because no test ever passed it.
@@ -531,6 +568,8 @@ test_readme_run_once
 test_shell_logging_policy
 test_python_logging_policy
 test_frontend_logging_policy
+test_assert_absent_str_requires_the_file
+test_assert_absent_str_still_detects_content
 test_license_apache
 test_license_mit
 test_license_none
