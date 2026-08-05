@@ -42,7 +42,7 @@ holds the roadmap + dependency order; `docs/design/` holds the architecture.
   INFO default, DEBUG via `--verbose`, ERROR always; logs→stderr, data→stdout;
   ISO-8601 UTC `<ts> <LEVEL> <name>: <msg>`; full trace on error (shell
   best-effort/cross-shell). Standard tier, mixed path; VERIFY observed on real
-  scaffolds. PR TBD.
+  scaffolds. Merged (PR #50).
 - **#25 built (`/sdlc-harden`).** Phase 4 gap-analysis command: audit an existing
   repo vs SDLC standards → categorized report (4 areas × 3 risk classes) →
   human prioritizes (close/defer/drop) → hybrid close (infra/doc/behavior-preserving
@@ -51,9 +51,24 @@ holds the roadmap + dependency order; `docs/design/` holds the architecture.
   never refactor untested code; report-first backlog; stack checklist delegated to
   profile (shell → `harden-shell-repo`, migration deferred to #21). New `sdlc-harden`
   skill + thin command + gap-report template; design decision #11. #20 closed as
-  dup of #25 (now in Phase 4). Full tier, prose. PR TBD.
+  dup of #25 (now in Phase 4). Full tier, prose. Merged (PR #51).
+- **#76 shipped (installer integrity).** First `/sdlc-bugfix` run on the delivery
+  surface itself. `apply.sh`'s manifest recorded owned *paths* but not *content*,
+  so it could only ask "is this mine?", never "has this changed?" — it silently
+  destroyed in-place edits to installed files, `--status` could not see a deleted
+  or truncated file, and `cp` never restored a cleared exec bit (`scaffold.sh` →
+  permission denied). Manifest lines are now `<sha256>  <path>`; legacy bare-path
+  manifests upgrade in place with no false drift and no reinstall. **All three
+  destructive paths — overwrite, uninstall, stale removal — are now consent-gated**
+  (`--force` overrides). Amends design decision #1: "git history is the recovery
+  path" holds for payload files, *not* for edits made directly in `~/.claude`,
+  which is exactly what self-hosting produces. Full tier, mixed path. Merged
+  (PR #79). Split out: **#77** (`cp`/`[[ -e ]]` follow symlinks) and **#78**
+  (`scaffold.sh --help` leaks code — a payload file, so it ships everywhere).
+  First code-path exercise of the bash 3.2 claim the repo has always made.
 - **NEXT ACTION:** proof-run `/sdlc-discovery` on a real concept (retro cuts #32 v2);
   then remaining Phase 3: #15 deploy(brew), #16 profile-sql, #18 /sdlc-retrospective.
+  Cheap and adjacent: **#78** (near one-line; #76 established the fix pattern).
 - **Graduation:** need ~3–4 clean `/sdlc-feature` runs + no process gaps in retros
   before using the SDLC on OTHER repos (see memory `sdlc-self-hosting`).
 - **Process reminder:** never commit/push before human review + approval (rule #10).
