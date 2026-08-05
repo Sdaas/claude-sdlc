@@ -395,6 +395,53 @@ test_stale_removal_preserves_drift() {
 	rm -rf "$root"
 }
 
+# ============================================================================
+# Test — a symlink at an owned path must not let apply.sh write outside --target
+# (#77). A DANGLING symlink is invisible to [[ -e ]], so a plain cp would follow
+# it and create the pointed-at file anywhere on disk. The installer must treat a
+# symlink as present (a collision needing consent), never a silent add-through.
+# ============================================================================
+test_symlink_write_escape_refused() {
+	local root
+	root="$(mktemp -d)"
+	make_fixture "$root"
+	local outside="$root/outside"
+	mkdir -p "$outside" "$TGT/commands"
+	# attacker plants a dangling symlink at a to-be-installed owned path
+	ln -s "$outside/escaped.md" "$TGT/commands/feature.md"
+
+	start "a dangling symlink at an owned path does not let apply.sh write outside --target"
+	run_apply
+	assert_absent "$outside/escaped.md" "nothing written outside --target through the symlink"
+	assert_eq 1 "$RC" "apply refuses (non-zero) rather than writing through the link"
+	assert_contains "$OUT" "don't own" "the symlinked path is reported as a collision"
+	rm -rf "$root"
+}
+
+# ============================================================================
+# Test — uninstall removes a symlink at an owned path but never its target (#77).
+# Characterization guard: the removal path is already safe (rm deletes the link,
+# not what it points at); this pins that so a future change can't regress it.
+# ============================================================================
+test_uninstall_symlink_leaves_external_target() {
+	local root
+	root="$(mktemp -d)"
+	make_fixture "$root"
+	run_apply # normal install; commands/feature.md is now owned
+	local outside="$root/outside"
+	mkdir -p "$outside"
+	printf 'EXTERNAL\n' >"$outside/secret.md"
+	rm "$TGT/commands/feature.md"
+	ln -s "$outside/secret.md" "$TGT/commands/feature.md"
+
+	start "uninstall removes the symlink at an owned path but leaves its external target intact"
+	run_apply --uninstall --force
+	assert_exists "$outside/secret.md" "external target survives uninstall"
+	assert_file_is "$outside/secret.md" "EXTERNAL" "external target content untouched"
+	assert_absent "$TGT/commands/feature.md" "the symlink at the owned path is removed"
+	rm -rf "$root"
+}
+
 # --- run all ----------------------------------------------------------------
 echo "Running apply.sh tests against: $APPLY"
 echo
@@ -416,6 +463,8 @@ test_exec_bit_repaired_when_content_unchanged
 test_unchanged_files_skipped
 test_uninstall_preserves_drift
 test_stale_removal_preserves_drift
+test_symlink_write_escape_refused
+test_uninstall_symlink_leaves_external_target
 echo
 printf 'Results: %d passed, %d failed\n' "$PASS" "$FAIL"
 [[ "$FAIL" -eq 0 ]]

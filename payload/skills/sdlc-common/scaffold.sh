@@ -38,7 +38,12 @@ die() {
 	printf 'scaffold.sh: error: %s\n' "$1" >&2
 	exit 1
 }
-usage() { sed -n '3,22p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; }
+# Print the header comment (from line 3 to the first non-comment line) as usage.
+# Scanning to the first non-# line — not a fixed range — so the header can grow
+# without leaking code into --help (#78).
+usage() {
+	awk 'NR < 3 { next } /^#/ { sub(/^# ?/, ""); print; next } { exit }' "${BASH_SOURCE[0]}"
+}
 
 # --- args -------------------------------------------------------------------
 while [[ $# -gt 0 ]]; do

@@ -123,11 +123,13 @@ recorded_sha() {
 }
 
 # Copy payload file $1 (target-relative) into place, matching the source mode.
-# cp only sets the mode when creating the file, so overwriting an existing
-# file would otherwise keep whatever mode the target already had (#76c).
+# Remove any existing path first so cp always CREATES a regular file: this both
+# lets cp set the mode from the source (#76c) and — critically — stops cp from
+# following a symlink at $dest and writing through it to outside --target (#77).
 write_file() {
 	local src="$PAYLOAD/$1" dest="$TARGET/$1"
 	mkdir -p "$(dirname "$dest")"
+	rm -f "$dest"
 	cp "$src" "$dest"
 	if [[ -x "$src" ]]; then chmod +x "$dest"; else chmod -x "$dest"; fi
 }
@@ -335,7 +337,11 @@ while IFS= read -r rel; do
 	src="$PAYLOAD/$rel"
 	dest="$TARGET/$rel"
 
-	if [[ ! -e "$dest" ]]; then
+	# -L as well as -e: a dangling symlink is invisible to -e, and treating it as
+	# a fresh add would let write_file's cp follow it outside --target (#77). A
+	# symlink (live or dangling) is "present" here, so it routes to the collision
+	# or drift path below — overwritten only with consent (--force).
+	if [[ ! -e "$dest" && ! -L "$dest" ]]; then
 		ADD_LIST+="$rel"$'\n'
 		continue
 	fi
