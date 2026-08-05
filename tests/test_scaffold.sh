@@ -432,6 +432,17 @@ test_frontend_logging_policy() {
 	rm -rf "$(dirname "$tgt")"
 }
 
+# --help must render the header comment only, never leak script code (#78).
+# The old usage() sliced a fixed line range that the header outgrew.
+test_help_no_code_leak() {
+	start "scaffold.sh --help prints usage text, not code"
+	local hf; hf="$(mktemp)"
+	"$SCAFFOLD" --help >"$hf" 2>&1
+	assert_contains "$hf" "Usage:" "help shows the usage line"
+	assert_absent_str "$hf" "set -euo pipefail" "help does not leak the strict-mode line"
+	rm -f "$hf"
+}
+
 echo "Running scaffold tests against: $SCAFFOLD"
 echo
 test_core_files
@@ -459,6 +470,7 @@ test_readme_run_once
 test_shell_logging_policy
 test_python_logging_policy
 test_frontend_logging_policy
+test_help_no_code_leak
 echo
 printf 'Results: %d passed, %d failed\n' "$PASS" "$FAIL"
 [[ "$FAIL" -eq 0 ]]
