@@ -67,10 +67,22 @@ The orchestrator proposes a tier at CLASSIFY; the human confirms or overrides.
 
 1. **Delivery is global; versioning is explicit.** `apply.sh` **copies**
    `payload/{commands,skills}` into `~/.claude` and writes
-   `~/.claude/.sdlc/{manifest,version}` (version + git sha + owned-path manifest).
-   Collision-guarded (never clobbers files it doesn't own), stale-removing,
-   reversible. Flat command names. No backups — this repo's git history is the
-   recovery path.
+   `~/.claude/.sdlc/{manifest,version}` (version + git sha + manifest of owned
+   paths **with a SHA-256 per file**). Stale-removing, reversible. Flat command
+   names. No backups — this repo's git history is the recovery path.
+
+   **Consent is required for both kinds of overwrite** (#76). A *foreign* file
+   (never installed by us) and a *locally modified* file (installed by us, then
+   edited in place) are both refused without `--force`, with different
+   explanations. The per-file hash is what makes the second case detectable;
+   without it the installer could only ask "is this mine?", never "has this
+   changed?", and it silently destroyed in-place edits.
+
+   Note the limit of the "git history is the recovery path" rule: it holds for
+   payload files, **not** for edits made directly in `~/.claude`, which exist
+   nowhere else. Those are exactly what the drift guard protects. Self-hosting
+   makes such edits routine — the loop is to tweak an installed skill mid-session
+   and port it back to the repo afterwards.
 2. **Spec-driven with HITL gates.** Following the 2026 industry pattern
    (requirements → design → plan, human approval between each). The spec is the
    contract; code is what ships.

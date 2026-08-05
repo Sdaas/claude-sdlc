@@ -6,12 +6,15 @@
 # exactly which paths we own in a manifest so updates are clean and nothing of
 # yours is ever clobbered. Version-stamped and reversible.
 #
+# The manifest records a SHA-256 per installed file, so a file you edited in
+# place is detected and never overwritten silently (#76).
+#
 # Usage:
 #   ./apply.sh                 Install or update to this repo's current version
-#   ./apply.sh --status        Show installed version + sha vs. repo version
-#   ./apply.sh --dry-run       Print the plan (add/overwrite/remove); change nothing
+#   ./apply.sh --status        Show installed version, plus an integrity report
+#   ./apply.sh --dry-run       Print the plan (add/update/unchanged/remove); change nothing
 #   ./apply.sh --uninstall     Remove every path we own; leave everything else
-#   ./apply.sh --force         Proceed even if a target collides with a foreign file
+#   ./apply.sh --force         Overwrite foreign files and discard local edits
 #   ./apply.sh --source DIR    Source repo root (default: this script's repo)
 #   ./apply.sh --target DIR    Target config dir (default: ~/.claude)
 #   ./apply.sh --verbose       List every action
@@ -43,13 +46,90 @@ log() { # only prints when --verbose
 }
 
 usage() {
-	# Print the header comment block (lines starting with '#') as help text.
-	sed -n '3,26p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
+	# Print the header comment block as help text: every line from 3 until the
+	# first non-comment line. (A fixed end line silently leaks code into --help
+	# as soon as the header grows.)
+	awk 'NR < 3 { next } /^#/ { sub(/^# ?/, ""); print; next } { exit }' "${BASH_SOURCE[0]}"
 }
 
 # Is $1 present as an exact line in the newline-delimited list $2 ?
 in_list() {
 	printf '%s\n' "$2" | grep -Fxq -- "$1"
+}
+
+# Count the lines in newline-delimited list $1.
+count_list() {
+	if [[ -z "$1" ]]; then echo 0; else printf '%s\n' "$1" | grep -c .; fi
+}
+
+# --- content hashing --------------------------------------------------------
+# Resolved once, as an array so the command and its flags stay separate words.
+# Both tools emit "<64 hex>  <path>".
+SHA_CMD=()
+if command -v shasum >/dev/null 2>&1; then
+	SHA_CMD=(shasum -a 256)
+elif command -v sha256sum >/dev/null 2>&1; then
+	SHA_CMD=(sha256sum)
+fi
+
+require_sha_cmd() {
+	[[ "${#SHA_CMD[@]}" -gt 0 ]] || die "no SHA-256 tool found (need 'shasum' or 'sha256sum' on PATH).
+apply.sh records content hashes to detect locally modified files; without one
+it cannot protect your edits from being overwritten."
+}
+
+# SHA-256 of file $1 (empty if not a readable regular file).
+sha_of() {
+	[[ -f "$1" ]] || return 0
+	"${SHA_CMD[@]}" "$1" 2>/dev/null | cut -c1-64
+}
+
+# Do the executable bits of $1 (source) and $2 (dest) agree?
+same_mode() {
+	if [[ -x "$1" ]]; then [[ -x "$2" ]]; else [[ ! -x "$2" ]]; fi
+}
+
+# --- manifest lines ---------------------------------------------------------
+# A manifest line is either "<sha>  <path>" (current) or a bare "<path>"
+# (legacy, written before hashes existed). Parsed positionally so that paths
+# containing spaces survive intact.
+is_hashed_line() {
+	[[ "${#1}" -gt 66 ]] || return 1
+	[[ "${1:64:2}" == "  " ]] || return 1
+	local h="${1:0:64}"
+	[[ "$h" != *[!0-9a-f]* ]]
+}
+
+# Every path in manifest content $1, one per line, in either format.
+manifest_paths() {
+	local line
+	while IFS= read -r line; do
+		[[ -n "$line" ]] || continue
+		if is_hashed_line "$line"; then printf '%s\n' "${line:66}"; else printf '%s\n' "$line"; fi
+	done <<<"$1"
+}
+
+# Recorded sha for target-relative path $1; empty when the manifest is legacy
+# (i.e. drift is unknowable for that path).
+recorded_sha() {
+	local line
+	while IFS= read -r line; do
+		[[ -n "$line" ]] || continue
+		if is_hashed_line "$line" && [[ "${line:66}" == "$1" ]]; then
+			printf '%s' "${line:0:64}"
+			return 0
+		fi
+	done <<<"$OLD_MANIFEST"
+}
+
+# Copy payload file $1 (target-relative) into place, matching the source mode.
+# cp only sets the mode when creating the file, so overwriting an existing
+# file would otherwise keep whatever mode the target already had (#76c).
+write_file() {
+	local src="$PAYLOAD/$1" dest="$TARGET/$1"
+	mkdir -p "$(dirname "$dest")"
+	cp "$src" "$dest"
+	if [[ -x "$src" ]]; then chmod +x "$dest"; else chmod -x "$dest"; fi
 }
 
 # Remove empty parent dirs upward from $1, stopping at $TARGET.
@@ -128,7 +208,17 @@ source_git_dirty() {
 	fi
 }
 
+require_sha_cmd
+
+# --- load previous manifest (may be empty) ----------------------------------
+OLD_MANIFEST=""
+if [[ -f "$MANIFEST" ]]; then
+	OLD_MANIFEST="$(cat "$MANIFEST")"
+fi
+
 # --- STATUS -----------------------------------------------------------------
+# Reports what is actually on disk, not merely what was recorded at install
+# time: a deleted or edited file used to be invisible here (#76b).
 if [[ "$MODE" == "status" ]]; then
 	if [[ -f "$STAMP" ]]; then
 		echo "Installed in: $TARGET"
@@ -136,14 +226,44 @@ if [[ "$MODE" == "status" ]]; then
 	else
 		echo "Not installed in: $TARGET"
 	fi
+
+	if [[ -n "$OLD_MANIFEST" ]]; then
+		TRACKED=0
+		OK=0
+		MODIFIED=""
+		MISSING=""
+		LEGACY=false
+		while IFS= read -r line; do
+			[[ -n "$line" ]] || continue
+			TRACKED=$((TRACKED + 1))
+			if is_hashed_line "$line"; then
+				rel="${line:66}"
+				rec="${line:0:64}"
+			else
+				rel="$line"
+				rec=""
+				LEGACY=true
+			fi
+			if [[ ! -e "$TARGET/$rel" ]]; then
+				MISSING+="$rel"$'\n'
+			elif [[ -n "$rec" && "$(sha_of "$TARGET/$rel")" != "$rec" ]]; then
+				MODIFIED+="$rel"$'\n'
+			else
+				OK=$((OK + 1))
+			fi
+		done <<<"$OLD_MANIFEST"
+
+		printf 'Integrity: %d tracked — %d ok, %d modified, %d missing\n' \
+			"$TRACKED" "$OK" "$(count_list "$MODIFIED")" "$(count_list "$MISSING")"
+		[[ -n "$MODIFIED" ]] && printf '%s' "$MODIFIED" | sed 's/^/  modified: /'
+		[[ -n "$MISSING" ]] && printf '%s' "$MISSING" | sed 's/^/  missing:  /'
+		if $LEGACY; then
+			echo "  (legacy manifest — no hashes recorded; re-run ./apply.sh to enable drift detection)"
+		fi
+	fi
+
 	echo "Repo version: $(read_source_version) (sha $(source_git_sha), dirty $(source_git_dirty))"
 	exit 0
-fi
-
-# --- load previous manifest (may be empty) ----------------------------------
-OLD_MANIFEST=""
-if [[ -f "$MANIFEST" ]]; then
-	OLD_MANIFEST="$(cat "$MANIFEST")"
 fi
 
 # --- UNINSTALL --------------------------------------------------------------
@@ -152,17 +272,41 @@ if [[ "$MODE" == "uninstall" ]]; then
 		echo "Nothing to uninstall (no manifest in $TARGET)."
 		exit 0
 	fi
-	while IFS= read -r rel; do
-		[[ -n "$rel" ]] || continue
+	# A file you edited in place is yours as much as ours — keep it unless
+	# --force, and keep tracking it so it never looks "foreign" later.
+	PRESERVED=""
+	while IFS= read -r line; do
+		[[ -n "$line" ]] || continue
+		if is_hashed_line "$line"; then
+			rel="${line:66}"
+			rec="${line:0:64}"
+		else
+			rel="$line"
+			rec=""
+		fi
 		local_path="$TARGET/$rel"
 		if [[ -e "$local_path" ]]; then
+			if [[ -n "$rec" ]] && ! $FORCE && [[ "$(sha_of "$local_path")" != "$rec" ]]; then
+				PRESERVED+="$line"$'\n'
+				log "preserved (locally modified) $rel"
+				continue
+			fi
 			rm -f "$local_path"
 			log "removed $rel"
 			prune_empty "$(dirname "$local_path")"
 		fi
 	done <<<"$OLD_MANIFEST"
-	rm -rf "$SDLC_DIR"
-	echo "Uninstalled from $TARGET."
+
+	if [[ -n "$PRESERVED" ]]; then
+		mkdir -p "$SDLC_DIR"
+		printf '%s' "$PRESERVED" >"$MANIFEST"
+		echo "Uninstalled from $TARGET, preserving locally modified files:"
+		manifest_paths "$PRESERVED" | sed 's/^/  - /'
+		echo "Re-run with --force to remove them too."
+	else
+		rm -rf "$SDLC_DIR"
+		echo "Uninstalled from $TARGET."
+	fi
 	exit 0
 fi
 
@@ -177,44 +321,83 @@ while IFS= read -r f; do
 done < <(find "$PAYLOAD" -type f ! -name '.gitkeep' | sort)
 NEW_LIST="${NEW_LIST%$'\n'}"
 
-# Collision check: a target that already exists, is NOT ours, and is not --force.
+# Classify every payload file. Two distinct refusals are possible: a FOREIGN
+# file (we never installed it) and a DRIFTED file (we installed it, you edited
+# it since). Both need consent; they need different explanations.
+OLD_PATHS="$(manifest_paths "$OLD_MANIFEST")"
 COLLISIONS=""
-ADD_COUNT=0
-OVERWRITE_COUNT=0
+DRIFTED=""
+ADD_LIST=""
+UPDATE_LIST=""
+UNCHANGED_LIST=""
 while IFS= read -r rel; do
 	[[ -n "$rel" ]] || continue
+	src="$PAYLOAD/$rel"
 	dest="$TARGET/$rel"
-	if [[ -e "$dest" ]]; then
-		if in_list "$rel" "$OLD_MANIFEST"; then
-			OVERWRITE_COUNT=$((OVERWRITE_COUNT + 1))
-		elif ! $FORCE; then
-			COLLISIONS+="$rel"$'\n'
-		else
-			OVERWRITE_COUNT=$((OVERWRITE_COUNT + 1))
-		fi
+
+	if [[ ! -e "$dest" ]]; then
+		ADD_LIST+="$rel"$'\n'
+		continue
+	fi
+
+	if ! in_list "$rel" "$OLD_PATHS"; then
+		if $FORCE; then UPDATE_LIST+="$rel"$'\n'; else COLLISIONS+="$rel"$'\n'; fi
+		continue
+	fi
+
+	rec="$(recorded_sha "$rel")"
+	if [[ -z "$rec" ]]; then
+		# Legacy manifest: nothing was recorded, so drift cannot be judged.
+		# Treat as a plain update rather than inventing a false accusation.
+		UPDATE_LIST+="$rel"$'\n'
+		continue
+	fi
+
+	cur="$(sha_of "$dest")"
+	if [[ "$cur" != "$rec" ]] && ! $FORCE; then
+		DRIFTED+="$rel"$'\n'
+		continue
+	fi
+
+	# Unchanged means content AND mode already match the source — a cleared
+	# executable bit still needs repairing even when the bytes are identical.
+	if [[ "$cur" == "$rec" && "$(sha_of "$src")" == "$rec" ]] && same_mode "$src" "$dest"; then
+		UNCHANGED_LIST+="$rel"$'\n'
 	else
-		ADD_COUNT=$((ADD_COUNT + 1))
+		UPDATE_LIST+="$rel"$'\n'
 	fi
 done <<<"$NEW_LIST"
 
-if [[ -n "$COLLISIONS" ]]; then
+if [[ -n "$DRIFTED" || -n "$COLLISIONS" ]]; then
 	{
-		echo "apply.sh: refusing to overwrite files we don't own:"
-		printf '%s' "$COLLISIONS" | sed 's/^/  - /'
-		echo "Re-run with --force to overwrite them."
+		if [[ -n "$DRIFTED" ]]; then
+			echo "apply.sh: refusing to overwrite locally modified files:"
+			printf '%s' "$DRIFTED" | sed 's/^/  - /'
+			echo "These differ from what apply.sh installed. Copy your changes into the"
+			echo "source repo first, or re-run with --force to discard them."
+		fi
+		if [[ -n "$COLLISIONS" ]]; then
+			echo "apply.sh: refusing to overwrite files we don't own:"
+			printf '%s' "$COLLISIONS" | sed 's/^/  - /'
+			echo "Re-run with --force to overwrite them."
+		fi
 	} >&2
 	exit 1
 fi
 
+ADD_COUNT="$(count_list "$ADD_LIST")"
+UPDATE_COUNT="$(count_list "$UPDATE_LIST")"
+UNCHANGED_COUNT="$(count_list "$UNCHANGED_LIST")"
+
 # Compute stale = in OLD manifest but not in NEW list.
 STALE=""
-if [[ -n "$OLD_MANIFEST" ]]; then
+if [[ -n "$OLD_PATHS" ]]; then
 	while IFS= read -r rel; do
 		[[ -n "$rel" ]] || continue
 		if ! in_list "$rel" "$NEW_LIST"; then
 			STALE+="$rel"$'\n'
 		fi
-	done <<<"$OLD_MANIFEST"
+	done <<<"$OLD_PATHS"
 fi
 STALE="${STALE%$'\n'}"
 REMOVE_COUNT=0
@@ -224,32 +407,55 @@ REMOVE_COUNT=0
 if $DRY_RUN; then
 	echo "Plan for $TARGET (version $(read_source_version)):"
 	echo "  add:       $ADD_COUNT"
-	echo "  overwrite: $OVERWRITE_COUNT"
+	echo "  update:    $UPDATE_COUNT"
+	echo "  unchanged: $UNCHANGED_COUNT"
 	echo "  remove:    $REMOVE_COUNT"
 	if $VERBOSE; then
-		while IFS= read -r rel; do [[ -n "$rel" ]] && echo "  + $rel"; done <<<"$NEW_LIST"
+		[[ -n "$ADD_LIST" ]] && while IFS= read -r rel; do [[ -n "$rel" ]] && echo "  + $rel"; done <<<"$ADD_LIST"
+		[[ -n "$UPDATE_LIST" ]] && while IFS= read -r rel; do [[ -n "$rel" ]] && echo "  ~ $rel"; done <<<"$UPDATE_LIST"
+		[[ -n "$UNCHANGED_LIST" ]] && while IFS= read -r rel; do [[ -n "$rel" ]] && echo "  = $rel"; done <<<"$UNCHANGED_LIST"
 		[[ -n "$STALE" ]] && while IFS= read -r rel; do [[ -n "$rel" ]] && echo "  - $rel"; done <<<"$STALE"
 	fi
 	echo "(dry run — nothing written)"
 	exit 0
 fi
 
-# --- apply: copy new/updated files -----------------------------------------
+# --- apply: copy added + updated files (unchanged ones are skipped) ---------
 while IFS= read -r rel; do
 	[[ -n "$rel" ]] || continue
-	src="$PAYLOAD/$rel"
-	dest="$TARGET/$rel"
-	mkdir -p "$(dirname "$dest")"
-	cp "$src" "$dest"
-	log "wrote $rel"
-done <<<"$NEW_LIST"
+	write_file "$rel"
+	log "added $rel"
+done <<<"$ADD_LIST"
+
+while IFS= read -r rel; do
+	[[ -n "$rel" ]] || continue
+	write_file "$rel"
+	log "updated $rel"
+done <<<"$UPDATE_LIST"
+
+while IFS= read -r rel; do
+	[[ -n "$rel" ]] || continue
+	log "unchanged $rel"
+done <<<"$UNCHANGED_LIST"
 
 # --- remove stale files -----------------------------------------------------
+# Dropping a file from the payload (a rename, say) must not delete your edits
+# either — the same consent rule as overwriting, on the removal path. A
+# preserved file stops being ours: the payload no longer claims that path, so
+# it is left behind untracked, as an ordinary file of yours.
+KEPT_STALE=""
 if [[ -n "$STALE" ]]; then
 	while IFS= read -r rel; do
 		[[ -n "$rel" ]] || continue
 		dest="$TARGET/$rel"
 		if [[ -e "$dest" ]]; then
+			rec="$(recorded_sha "$rel")"
+			if [[ -n "$rec" ]] && ! $FORCE && [[ "$(sha_of "$dest")" != "$rec" ]]; then
+				KEPT_STALE+="$rel"$'\n'
+				REMOVE_COUNT=$((REMOVE_COUNT - 1))
+				log "kept locally modified $rel (no longer in payload)"
+				continue
+			fi
 			rm -f "$dest"
 			log "removed stale $rel"
 			prune_empty "$(dirname "$dest")"
@@ -258,8 +464,15 @@ if [[ -n "$STALE" ]]; then
 fi
 
 # --- write manifest + version stamp ----------------------------------------
+# Record the sha of what we just wrote, so the next run can tell an untouched
+# file from one you edited in place.
 mkdir -p "$SDLC_DIR"
-printf '%s\n' "$NEW_LIST" >"$MANIFEST"
+NEW_MANIFEST=""
+while IFS= read -r rel; do
+	[[ -n "$rel" ]] || continue
+	NEW_MANIFEST+="$(sha_of "$PAYLOAD/$rel")  $rel"$'\n'
+done <<<"$NEW_LIST"
+printf '%s' "$NEW_MANIFEST" >"$MANIFEST"
 {
 	echo "version=$(read_source_version)"
 	echo "git_sha=$(source_git_sha)"
@@ -269,4 +482,8 @@ printf '%s\n' "$NEW_LIST" >"$MANIFEST"
 } >"$STAMP"
 
 echo "Applied version $(read_source_version) to $TARGET"
-echo "  added $ADD_COUNT, overwrote $OVERWRITE_COUNT, removed $REMOVE_COUNT"
+echo "  added $ADD_COUNT, updated $UPDATE_COUNT, unchanged $UNCHANGED_COUNT, removed $REMOVE_COUNT"
+if [[ -n "$KEPT_STALE" ]]; then
+	echo "  kept (locally modified, no longer in the payload — now untracked):"
+	printf '%s' "$KEPT_STALE" | sed 's/^/    - /'
+fi

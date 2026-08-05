@@ -52,6 +52,14 @@ assert_file_is() { # path expected-content msg
 	if [[ "$got" == "$2" ]]; then pass "$3"; else fail "file $1: expected [$2] got [$got] — $3"; fi
 }
 
+assert_executable() { # path msg
+	if [[ -x "$1" ]]; then pass "$2"; else fail "expected executable: $1 — $2"; fi
+}
+
+assert_not_contains() { # haystack needle msg
+	if [[ "$1" != *"$2"* ]]; then pass "$3"; else fail "expected NOT to contain [$2] — $3"; fi
+}
+
 # --- fixtures ---------------------------------------------------------------
 # Build a fake SOURCE repo (VERSION + payload/) and an empty TARGET.
 make_fixture() {
@@ -62,6 +70,21 @@ make_fixture() {
 	printf '0.1.0\n' >"$SRC/VERSION"
 	printf 'feature command v1\n' >"$SRC/payload/commands/feature.md"
 	printf 'sdlc-common skill v1\n' >"$SRC/payload/skills/sdlc-common/SKILL.md"
+	# an executable payload file, so mode handling is covered (cf. scaffold.sh)
+	printf '#!/usr/bin/env bash\necho v1\n' >"$SRC/payload/skills/sdlc-common/scaffold.sh"
+	chmod +x "$SRC/payload/skills/sdlc-common/scaffold.sh"
+}
+
+# Rewrite the target manifest in the legacy (bare-path, no hash) format, as
+# written by apply.sh before content hashes existed.
+downgrade_manifest_to_legacy() {
+	local m="$TGT/.sdlc/manifest" tmp
+	tmp="$(mktemp)"
+	while IFS= read -r line; do
+		[[ -n "$line" ]] || continue
+		if [[ "$line" == *"  "* ]]; then printf '%s\n' "${line#*  }"; else printf '%s\n' "$line"; fi
+	done <"$m" >"$tmp"
+	mv "$tmp" "$m"
 }
 
 run_apply() { # args...  -> sets OUT and RC
@@ -178,6 +201,200 @@ test_uninstall() {
 	rm -rf "$root"
 }
 
+# ============================================================================
+# Test 8 — drift guard: a locally edited owned file blocks install (#76a)
+# ============================================================================
+test_drift_blocks_install() {
+	start "locally modified owned file blocks install"
+	local root; root="$(mktemp -d)"; make_fixture "$root"
+	run_apply
+	printf 'MY LOCAL EDIT\n' >>"$TGT/skills/sdlc-common/SKILL.md"
+	printf 'feature command v2\n' >"$SRC/payload/commands/feature.md" # a real update is pending
+	run_apply
+	assert_eq 1 "$RC" "aborts non-zero on drift"
+	assert_contains "$OUT" "locally modified" "explains the reason"
+	assert_contains "$OUT" "skills/sdlc-common/SKILL.md" "names the drifted file"
+	assert_file_is "$TGT/skills/sdlc-common/SKILL.md" \
+		"sdlc-common skill v1
+MY LOCAL EDIT" "local edit preserved"
+	assert_file_is "$TGT/commands/feature.md" "feature command v1" "no partial write of other files"
+	rm -rf "$root"
+}
+
+# ============================================================================
+# Test 9 — --force discards local edits deliberately
+# ============================================================================
+test_drift_force_overwrites() {
+	start "--force overwrites a locally modified file"
+	local root; root="$(mktemp -d)"; make_fixture "$root"
+	run_apply
+	printf 'MY LOCAL EDIT\n' >>"$TGT/skills/sdlc-common/SKILL.md"
+	run_apply --force
+	assert_eq 0 "$RC" "--force exits 0"
+	assert_file_is "$TGT/skills/sdlc-common/SKILL.md" "sdlc-common skill v1" "edit discarded on --force"
+	rm -rf "$root"
+}
+
+# ============================================================================
+# Test 10 — drift and foreign collisions are reported as distinct causes
+# ============================================================================
+test_drift_vs_foreign_reported_separately() {
+	start "drift and foreign collision reported separately"
+	local root; root="$(mktemp -d)"; make_fixture "$root"
+	run_apply
+	printf 'MY LOCAL EDIT\n' >>"$TGT/skills/sdlc-common/SKILL.md"   # ours, modified
+	printf 'USER OWNED\n' >"$TGT/commands/other.md"                  # not ours
+	printf 'other command\n' >"$SRC/payload/commands/other.md"       # now claimed by payload
+	run_apply
+	assert_eq 1 "$RC" "aborts non-zero"
+	assert_contains "$OUT" "locally modified" "drift block present"
+	assert_contains "$OUT" "don't own" "foreign-collision block present"
+	rm -rf "$root"
+}
+
+# ============================================================================
+# Test 11 — --status detects modified and missing files (#76b)
+# ============================================================================
+test_status_reports_drift() {
+	start "--status reports modified and missing files"
+	local root; root="$(mktemp -d)"; make_fixture "$root"
+	run_apply
+	printf 'TRUNCATED\n' >"$TGT/commands/feature.md"
+	rm -f "$TGT/skills/sdlc-common/SKILL.md"
+	run_apply --status
+	assert_eq 0 "$RC" "status still exits 0"
+	assert_contains "$OUT" "modified" "reports the modified file class"
+	assert_contains "$OUT" "commands/feature.md" "names the modified file"
+	assert_contains "$OUT" "missing" "reports the missing file class"
+	assert_contains "$OUT" "skills/sdlc-common/SKILL.md" "names the missing file"
+	rm -rf "$root"
+}
+
+# ============================================================================
+# Test 12 — --status is quiet about drift on a healthy install
+# ============================================================================
+test_status_clean_install() {
+	start "--status reports a clean install as ok"
+	local root; root="$(mktemp -d)"; make_fixture "$root"
+	run_apply
+	run_apply --status
+	assert_eq 0 "$RC" "status exits 0"
+	assert_not_contains "$OUT" "modified:" "no modified files listed"
+	assert_not_contains "$OUT" "missing:" "no missing files listed"
+	rm -rf "$root"
+}
+
+# ============================================================================
+# Test 13 — a legacy (bare-path) manifest upgrades without false drift
+# ============================================================================
+test_legacy_manifest_upgrade() {
+	start "legacy manifest upgrades to hashes without false drift"
+	local root; root="$(mktemp -d)"; make_fixture "$root"
+	run_apply
+	downgrade_manifest_to_legacy
+	printf 'EDITED BEFORE UPGRADE\n' >>"$TGT/skills/sdlc-common/SKILL.md"
+	run_apply
+	assert_eq 0 "$RC" "no false drift on first run after upgrade"
+	assert_not_contains "$OUT" "locally modified" "does not claim drift it cannot know about"
+	assert_contains "$(cat "$TGT/.sdlc/manifest")" "  commands/feature.md" "manifest rewritten with hashes"
+	# protection is live from the next run on
+	printf 'EDIT AFTER UPGRADE\n' >>"$TGT/skills/sdlc-common/SKILL.md"
+	run_apply
+	assert_eq 1 "$RC" "drift detected on the following run"
+	rm -rf "$root"
+}
+
+# ============================================================================
+# Test 14 — the executable bit is restored on update (#76c)
+# ============================================================================
+test_exec_bit_restored_on_update() {
+	start "executable bit restored when a file is updated"
+	local root; root="$(mktemp -d)"; make_fixture "$root"
+	run_apply
+	assert_executable "$TGT/skills/sdlc-common/scaffold.sh" "executable on fresh install"
+	chmod -x "$TGT/skills/sdlc-common/scaffold.sh"
+	printf '#!/usr/bin/env bash\necho v2\n' >"$SRC/payload/skills/sdlc-common/scaffold.sh"
+	chmod +x "$SRC/payload/skills/sdlc-common/scaffold.sh"
+	run_apply --force # content drifted (we chmod'd, not edited) — force past the guard
+	assert_executable "$TGT/skills/sdlc-common/scaffold.sh" "executable restored after update"
+	rm -rf "$root"
+}
+
+# ============================================================================
+# Test 15 — mode is repaired even when content is unchanged
+#   (the "unchanged => skip" optimization must not skip a mode repair)
+# ============================================================================
+test_exec_bit_repaired_when_content_unchanged() {
+	start "executable bit repaired when content is unchanged"
+	local root; root="$(mktemp -d)"; make_fixture "$root"
+	run_apply
+	chmod -x "$TGT/skills/sdlc-common/scaffold.sh"
+	run_apply
+	assert_eq 0 "$RC" "re-apply exits 0"
+	assert_executable "$TGT/skills/sdlc-common/scaffold.sh" "mode repaired without a content change"
+	rm -rf "$root"
+}
+
+# ============================================================================
+# Test 16 — unchanged files are skipped and reported
+# ============================================================================
+test_unchanged_files_skipped() {
+	start "unchanged files are skipped and reported"
+	local root; root="$(mktemp -d)"; make_fixture "$root"
+	run_apply
+	assert_contains "$OUT" "added 3" "fresh install reports 3 added"
+	run_apply
+	assert_eq 0 "$RC" "re-apply exits 0"
+	assert_contains "$OUT" "unchanged 3" "re-apply reports all 3 unchanged"
+	rm -rf "$root"
+}
+
+# ============================================================================
+# Test 17 — uninstall preserves locally modified files unless --force
+# ============================================================================
+test_uninstall_preserves_drift() {
+	start "--uninstall preserves locally modified files unless --force"
+	local root; root="$(mktemp -d)"; make_fixture "$root"
+	run_apply
+	printf 'MY LOCAL EDIT\n' >>"$TGT/skills/sdlc-common/SKILL.md"
+	run_apply --uninstall
+	assert_eq 0 "$RC" "uninstall exits 0"
+	assert_exists "$TGT/skills/sdlc-common/SKILL.md" "modified file preserved"
+	assert_absent "$TGT/commands/feature.md" "unmodified file removed"
+	assert_exists "$TGT/.sdlc/manifest" "manifest retained to track what is left"
+	assert_contains "$(cat "$TGT/.sdlc/manifest")" "skills/sdlc-common/SKILL.md" "manifest lists the preserved file"
+	assert_not_contains "$(cat "$TGT/.sdlc/manifest")" "commands/feature.md" "manifest drops the removed file"
+	run_apply --uninstall --force
+	assert_eq 0 "$RC" "forced uninstall exits 0"
+	assert_absent "$TGT/skills/sdlc-common/SKILL.md" "--force removes the modified file"
+	assert_absent "$TGT/.sdlc" ".sdlc dir removed once nothing is left"
+	rm -rf "$root"
+}
+
+# ============================================================================
+# Test 18 — stale removal respects local edits too
+#   A file dropped from the payload (e.g. a rename) must not be deleted out
+#   from under the user if they had edited the installed copy.
+# ============================================================================
+test_stale_removal_preserves_drift() {
+	start "stale removal preserves a locally modified file"
+	local root; root="$(mktemp -d)"; make_fixture "$root"
+	run_apply
+	printf 'MY LOCAL EDIT\n' >>"$TGT/commands/feature.md"
+	rm "$SRC/payload/commands/feature.md" # payload drops it (renamed, say)
+	run_apply
+	assert_eq 0 "$RC" "update still exits 0"
+	assert_exists "$TGT/commands/feature.md" "locally modified stale file preserved"
+	assert_contains "$OUT" "feature.md" "reports what it kept"
+	# an untouched stale file is still removed
+	printf 'other\n' >"$SRC/payload/commands/other.md"
+	run_apply
+	rm "$SRC/payload/commands/other.md"
+	run_apply
+	assert_absent "$TGT/commands/other.md" "untouched stale file still removed"
+	rm -rf "$root"
+}
+
 # --- run all ----------------------------------------------------------------
 echo "Running apply.sh tests against: $APPLY"
 echo
@@ -188,6 +405,17 @@ test_idempotent
 test_stale_removal
 test_collision
 test_uninstall
+test_drift_blocks_install
+test_drift_force_overwrites
+test_drift_vs_foreign_reported_separately
+test_status_reports_drift
+test_status_clean_install
+test_legacy_manifest_upgrade
+test_exec_bit_restored_on_update
+test_exec_bit_repaired_when_content_unchanged
+test_unchanged_files_skipped
+test_uninstall_preserves_drift
+test_stale_removal_preserves_drift
 echo
 printf 'Results: %d passed, %d failed\n' "$PASS" "$FAIL"
 [[ "$FAIL" -eq 0 ]]

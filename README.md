@@ -36,7 +36,7 @@ cd claude-sdlc
 # Install / update:
 ./apply.sh
 
-# Check what's installed:
+# Check what's installed, and whether anything has been edited since:
 ./apply.sh --status
 
 # Remove everything this installed (leaves your other ~/.claude files):
@@ -47,6 +47,33 @@ Once installed, the SDLC commands (e.g. `/sdlc-newproject`, `/sdlc-feature`)
 become available in Claude Code globally. Every SDLC-owned command is prefixed
 `sdlc-` so it never collides with Claude Code's built-in or third-party
 commands/skills.
+
+### Your local edits are safe
+
+`apply.sh` records a SHA-256 of every file it installs, so it can tell an
+untouched file from one you edited in place. If you tweak an installed command
+or skill under `~/.claude`, the next `./apply.sh` **stops** rather than
+overwriting it:
+
+```
+apply.sh: refusing to overwrite locally modified files:
+  - skills/sdlc-common/SKILL.md
+These differ from what apply.sh installed. Copy your changes into the
+source repo first, or re-run with --force to discard them.
+```
+
+Copy the change back into `payload/` (where it gets version-controlled), or
+re-run with `--force` to discard it. `--status` reports the same information
+without changing anything:
+
+```
+Integrity: 54 tracked — 52 ok, 1 modified, 1 missing
+  modified: skills/sdlc-common/SKILL.md
+  missing:  commands/sdlc-help.md
+```
+
+`--uninstall` follows the same rule: locally modified files are preserved and
+listed, unless you pass `--force`.
 
 ---
 
