@@ -13,7 +13,7 @@ FAILED=0
 
 SHELL_FILES=(
 	apply.sh test.sh release.sh setup.sh install-hooks.sh hooks/pre-push
-	tests/test_apply.sh tests/test_scaffold.sh tests/test_setup.sh
+	tests/test_apply.sh tests/test_scaffold.sh tests/test_setup.sh tests/test_dogfood.sh
 	payload/skills/sdlc-common/scaffold.sh
 )
 
@@ -52,6 +52,14 @@ if bash tests/test_setup.sh; then
 	echo "    setup tests passed"
 else
 	echo "    setup tests FAILED"
+	FAILED=1
+fi
+
+echo "==> tests/test_dogfood.sh"
+if bash tests/test_dogfood.sh; then
+	echo "    dogfood tests passed"
+else
+	echo "    dogfood tests FAILED"
 	FAILED=1
 fi
 
