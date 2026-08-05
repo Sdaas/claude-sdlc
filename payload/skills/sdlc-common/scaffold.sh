@@ -60,6 +60,20 @@ done
 
 [[ -n "$TARGET" ]] || die "--target is required"
 [[ -n "$NAME" ]] || die "--name is required"
+
+# Validate the enumerated options BEFORE writing anything, so a bad value is a
+# clean exit rather than a half-built project the user has to delete by hand.
+# A license resolves to its template by convention: <value>.tmpl, no exceptions.
+case "$LICENSE" in
+mit | apache | none) ;;
+*) die "unknown license: $LICENSE" ;;
+esac
+[[ "$LICENSE" == "none" ]] || [[ -f "$TEMPLATES/licenses/$LICENSE.tmpl" ]] ||
+	die "no license template for: $LICENSE"
+case "$PROFILE" in
+shell | python | frontend | sql) ;;
+*) die "unknown profile: $PROFILE" ;;
+esac
 if [[ -z "$AUTHOR" ]]; then
 	AUTHOR="$(git config user.name 2>/dev/null || true)"
 	[[ -n "$AUTHOR" ]] || AUTHOR="Unknown"
@@ -194,12 +208,9 @@ mkdir -p "$TARGET/docs/retrospectives"
 case "$LICENSE" in
 none) : ;;
 mit | apache)
-	lic="$TEMPLATES/licenses/$LICENSE.tmpl"
-	[[ "$LICENSE" == "apache" ]] && lic="$TEMPLATES/licenses/apache-2.0.tmpl"
-	[[ -f "$lic" ]] || die "no license template for: $LICENSE"
-	render "$lic" "$TARGET/LICENSE"
+	render "$TEMPLATES/licenses/$LICENSE.tmpl" "$TARGET/LICENSE"
 	;;
-*) die "unknown license: $LICENSE" ;;
+*) die "unknown license: $LICENSE" ;; # unreachable — validated above
 esac
 
 # --- executable bits --------------------------------------------------------

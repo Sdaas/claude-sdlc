@@ -160,6 +160,14 @@ The orchestrator proposes a tier at CLASSIFY; the human confirms or overrides.
     `harden-shell-repo` skill (folding that into `profile-shell` is deferred to
     #21). The workflow lives in a `sdlc-harden` skill; the command is a thin
     gate-walker. Generalizes `harden-shell-repo` from shell to all profiles.
+12. **The scaffolder validates enumerated options before it writes anything,
+    and resolves them to templates by convention.** An option value maps to its
+    template as `<value>.tmpl` with **no special cases** — the one license that
+    escaped that convention (`apache` → `apache-2.0.tmpl`) pointed at a file
+    nobody had written, and shipped broken. Validation of `--license` and
+    `--profile` (plus the license template's existence) happens beside the
+    required-argument checks, **before the first `mkdir`**, so a bad value is a
+    clean exit instead of a half-built project the user must delete by hand. (#52)
 
 ## Backlog, branching, CI, and review guide
 

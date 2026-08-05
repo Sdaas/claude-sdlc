@@ -33,6 +33,8 @@ assert_absent_str() {
 	got="$(cat "$1" 2>/dev/null || true)"
 	if [[ "$got" != *"$2"* ]]; then pass "$3"; else fail "file $1 still contains [$2] — $3"; fi
 }
+assert_absent() { if [[ ! -e "$1" ]]; then pass "$2"; else fail "should not exist: $1 — $2"; fi; }
+assert_nonzero() { if [[ "$1" -ne 0 ]]; then pass "$2"; else fail "expected non-zero exit — $2"; fi; }
 
 scaffold_sample() { # target
 	"$SCAFFOLD" \
@@ -432,6 +434,76 @@ test_frontend_logging_policy() {
 	rm -rf "$(dirname "$tgt")"
 }
 
+# --- License matrix (#52) ---------------------------------------------------
+# Every license value the interview advertises must actually scaffold. `apache`
+# shipped broken because no test ever passed it.
+
+test_license_apache() {
+	start "--license apache scaffolds an Apache-2.0 LICENSE"
+	local tgt; tgt="$(mktemp -d)/proj"
+	scaffold_sample "$tgt" --license apache >/dev/null 2>&1
+	assert_eq 0 "$?" "scaffold exits 0 with --license apache"
+	assert_exists "$tgt/LICENSE" "LICENSE exists"
+	assert_contains "$tgt/LICENSE" "Apache License" "LICENSE is the Apache License"
+	assert_contains "$tgt/LICENSE" "Version 2.0" "LICENSE is version 2.0"
+	assert_contains "$tgt/LICENSE" "Ada Lovelace" "author rendered into LICENSE"
+	assert_absent_str "$tgt/LICENSE" "{{" "no leftover placeholders in LICENSE"
+	rm -rf "$(dirname "$tgt")"
+}
+
+test_license_mit() {
+	start "--license mit scaffolds an MIT LICENSE"
+	local tgt; tgt="$(mktemp -d)/proj"
+	scaffold_sample "$tgt" --license mit >/dev/null 2>&1
+	assert_eq 0 "$?" "scaffold exits 0 with --license mit"
+	assert_contains "$tgt/LICENSE" "MIT License" "LICENSE is the MIT License"
+	assert_contains "$tgt/LICENSE" "Ada Lovelace" "author rendered into LICENSE"
+	assert_absent_str "$tgt/LICENSE" "{{" "no leftover placeholders in LICENSE"
+	rm -rf "$(dirname "$tgt")"
+}
+
+test_license_none() {
+	start "--license none scaffolds no LICENSE file"
+	local tgt; tgt="$(mktemp -d)/proj"
+	scaffold_sample "$tgt" --license none >/dev/null 2>&1
+	assert_eq 0 "$?" "scaffold exits 0 with --license none"
+	assert_exists "$tgt/README.md" "the rest of the scaffold is still written"
+	assert_absent "$tgt/LICENSE" "no LICENSE file is created"
+	rm -rf "$(dirname "$tgt")"
+}
+
+# A rejected option must fail BEFORE any filesystem writes — otherwise the user
+# is left with a half-built repo to clean up by hand.
+test_license_rejected_before_writing() {
+	start "an unknown --license fails before writing anything"
+	local root tgt out rc
+	root="$(mktemp -d)"; tgt="$root/proj"
+	out="$(scaffold_sample "$tgt" --license bogus 2>&1)"; rc=$?
+	assert_nonzero "$rc" "scaffold exits non-zero for an unknown license"
+	if [[ "$out" == *"unknown license"* ]]; then
+		pass "error names the bad license"
+	else
+		fail "expected 'unknown license' in: $out"
+	fi
+	assert_absent "$tgt" "no partial scaffold is left behind"
+	rm -rf "$root"
+}
+
+test_profile_rejected_before_writing() {
+	start "an unknown --profile fails before writing anything"
+	local root tgt out rc
+	root="$(mktemp -d)"; tgt="$root/proj"
+	out="$(scaffold_sample "$tgt" --profile bogus 2>&1)"; rc=$?
+	assert_nonzero "$rc" "scaffold exits non-zero for an unknown profile"
+	if [[ "$out" == *"unknown profile"* ]]; then
+		pass "error names the bad profile"
+	else
+		fail "expected 'unknown profile' in: $out"
+	fi
+	assert_absent "$tgt" "no partial scaffold is left behind"
+	rm -rf "$root"
+}
+
 echo "Running scaffold tests against: $SCAFFOLD"
 echo
 test_core_files
@@ -459,6 +531,11 @@ test_readme_run_once
 test_shell_logging_policy
 test_python_logging_policy
 test_frontend_logging_policy
+test_license_apache
+test_license_mit
+test_license_none
+test_license_rejected_before_writing
+test_profile_rejected_before_writing
 echo
 printf 'Results: %d passed, %d failed\n' "$PASS" "$FAIL"
 [[ "$FAIL" -eq 0 ]]
