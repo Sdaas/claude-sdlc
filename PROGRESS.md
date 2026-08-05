@@ -42,7 +42,7 @@ holds the roadmap + dependency order; `docs/design/` holds the architecture.
   INFO default, DEBUG via `--verbose`, ERROR always; logs→stderr, data→stdout;
   ISO-8601 UTC `<ts> <LEVEL> <name>: <msg>`; full trace on error (shell
   best-effort/cross-shell). Standard tier, mixed path; VERIFY observed on real
-  scaffolds. PR TBD.
+  scaffolds. Merged (PR #50); retro harvested into #69, then discarded (see #68).
 - **#25 built (`/sdlc-harden`).** Phase 4 gap-analysis command: audit an existing
   repo vs SDLC standards → categorized report (4 areas × 3 risk classes) →
   human prioritizes (close/defer/drop) → hybrid close (infra/doc/behavior-preserving
@@ -51,9 +51,19 @@ holds the roadmap + dependency order; `docs/design/` holds the architecture.
   never refactor untested code; report-first backlog; stack checklist delegated to
   profile (shell → `harden-shell-repo`, migration deferred to #21). New `sdlc-harden`
   skill + thin command + gap-report template; design decision #11. #20 closed as
-  dup of #25 (now in Phase 4). Full tier, prose. PR TBD.
-- **NEXT ACTION:** proof-run `/sdlc-discovery` on a real concept (retro cuts #32 v2);
-  then remaining Phase 3: #15 deploy(brew), #16 profile-sql, #18 /sdlc-retrospective.
+  dup of #25 (now in Phase 4). Full tier, prose. Merged (PR #51); #25 closed.
+- **Phase 5 opened — review remediation.** Two independent reviews landed
+  2026-08-05: an external professional review (`docs/reviews/2026-08-05-external-review.md`)
+  and this repo's own `/sdlc-harden` self-audit — the first real proof-run of #25,
+  kept as a working doc and discarded once decomposed into issues. They
+  converge on one root cause: **single-source-of-truth
+  drift** — rules copy-pasted across commands, cited by fragile `§N`/`#N`
+  numbers, and paths asserted in prose that nothing checks. 16 issues filed
+  (#52–#67); sequencing + tier/command assignments in `PLAN.md` Phase 5.
+- **NEXT ACTION:** Phase 5b — #52 (`--license apache`, the one shipped user-facing
+  bug) via `/sdlc-bugfix`, then #53's path/template integrity checks. Still owed
+  from Phase 3: proof-run `/sdlc-discovery` on a real concept (retro cuts #32 v2);
+  #15 deploy(brew), #16 profile-sql.
 - **Graduation:** need ~3–4 clean `/sdlc-feature` runs + no process gaps in retros
   before using the SDLC on OTHER repos (see memory `sdlc-self-hosting`).
 - **Process reminder:** never commit/push before human review + approval (rule #10).
@@ -68,6 +78,43 @@ listed order. Update this file's NEXT ACTION to the active issue #.
 ## Session log
 
 Newest first. One short entry per working session.
+
+### 2026-08-05 — Session 2 (review triage)
+- **Reconciled two reviews** — an external professional review (Opus 4.8, now at
+  `docs/reviews/2026-08-05-external-review.md`) and the `/sdlc-harden` self-audit
+  (a working doc, since discarded). Overlap is heavy; both land on
+  single-source-of-truth drift as the root cause. Cross-checked every finding
+  against the board.
+- **Filed 5 gaps neither review's issue set covered:** #63 (pre-push still uses
+  `hooks/`+symlink, not `.githooks/`+`core.hooksPath`), #64 (repo doesn't dogfood
+  the `--integration` lane + clean-install CI it ships via #43), #65 (no hardening
+  checklist for profile-python/frontend), #66 (`/sdlc-newproject` offers unwired
+  pip/npm/container distribution), #67 ("deliberately simple" framing vs actual
+  Standard-tier ceremony). **Widened #53** to absorb harden gap G3 (template-path
+  + dangling-path checks) rather than filing a near-duplicate.
+- **Key insight:** #52, #56 and #58 are *one* defect — a path named in prose that
+  is absent on disk. #53's path checks kill the class, not three instances.
+- **Sequencing correction:** the first draft of Phase 5 had the linter land red
+  and be repaired after. That is impossible here — "tests green before push" is
+  enforced by the pre-push hook, so red must live inside a branch. #52 therefore
+  runs first and alone as a real reproduce-first `/sdlc-bugfix` (the command needs
+  the self-hosting mileage more than #53 needs to demonstrate a red).
+- **Shipped #57** (Quick, on `main`): the root `CLAUDE.md` stack marker this repo
+  required of everyone else but lacked. Deliberately minimal — marker, structure,
+  pointers — and it does **not** restate the process rules, which stay in
+  `sdlc-common`. Writing a fifth copy of them while #54 is open to de-duplicate
+  them would have been self-defeating. (Drafting it nearly reproduced #58: an
+  early version listed a root `templates/` that does not exist.)
+- **Shipped #59** (Quick, on `main`): un-staled this cursor — #24→PR #50,
+  #25→PR #51, both had sat as "PR TBD" though merged. Took the **"or gone"**
+  branch of #59's DoD for the retro doc: **harvested then discarded**, along with
+  the `/sdlc-harden` working report. Harvest produced **#68** (make retro docs
+  ephemeral + add a HARVEST gate — the design change) and **#69** (the #24
+  lesson, which had sat unfiled for two days marked "pending developer's call").
+  The external review is kept at `docs/reviews/` — 16 issue bodies cite it.
+- **Process note:** the #24 retro proved that writing a durable doc does not make
+  a lesson durable. Harvesting does. That is the whole of #68.
+- Next: #52 via `/sdlc-bugfix`, then #53.
 
 ### 2026-08-02 — Session 1 (cont. 10)
 - **Shipped #42** via `/sdlc-feature` (prose, **Full tier**): a **VERIFY gate** ("observe
