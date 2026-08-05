@@ -43,6 +43,15 @@ holds the roadmap + dependency order; `docs/design/` holds the architecture.
   ISO-8601 UTC `<ts> <LEVEL> <name>: <msg>`; full trace on error (shell
   best-effort/cross-shell). Standard tier, mixed path; VERIFY observed on real
   scaffolds. PR TBD.
+- **#25 built (`/sdlc-harden`).** Phase 4 gap-analysis command: audit an existing
+  repo vs SDLC standards → categorized report (4 areas × 3 risk classes) →
+  human prioritizes (close/defer/drop) → hybrid close (infra/doc/behavior-preserving
+  in-harden under a green safety net; behavior/logic escalates to `/sdlc-feature` /
+  `/sdlc-bugfix`). Audit default / apply opt-in; mode ≠ tier; cardinal rule =
+  never refactor untested code; report-first backlog; stack checklist delegated to
+  profile (shell → `harden-shell-repo`, migration deferred to #21). New `sdlc-harden`
+  skill + thin command + gap-report template; design decision #11. #20 closed as
+  dup of #25 (now in Phase 4). Full tier, prose. PR TBD.
 - **NEXT ACTION:** proof-run `/sdlc-discovery` on a real concept (retro cuts #32 v2);
   then remaining Phase 3: #15 deploy(brew), #16 profile-sql, #18 /sdlc-retrospective.
 - **Graduation:** need ~3–4 clean `/sdlc-feature` runs + no process gaps in retros
