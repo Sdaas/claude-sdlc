@@ -138,6 +138,8 @@ sections in the harden audit itself is tracked as #87.)*
   report.
 - Delete `SESSION_STATE.md`; the durable summary goes to the backlog / a report.
 - Full tier: run a short retrospective (`/sdlc-retrospective`) and record lessons.
+  Ensure its findings are routed (issues / `design/overview.md` / `sdlc-common`)
+  and delete the transient `RETRO.md` — routing must be complete first.
 
 ---
 

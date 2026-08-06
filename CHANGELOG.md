@@ -7,7 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.2.0] - 2026-08-06
+### Changed
+- `/sdlc-retrospective` retros are now **transient**: the command writes a working
+  `RETRO.md`, routes findings to durable homes (action items → GitHub issues;
+  principles → `design/overview.md` or `sdlc-common`), then deletes it at
+  close-out. Replaces the durable `docs/retrospectives/` archive. (#81)
+
+### Removed
+- The scaffolder no longer creates `docs/retrospectives/` in generated repos;
+  retros are transient. (#81)
 
 First genuine tagged release. It consolidates everything built since the Phase 0
 foundation — the repo was developed against a stale `0.1.0` that was never cut,

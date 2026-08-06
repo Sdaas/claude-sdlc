@@ -112,6 +112,15 @@ edits docs) — run each file down its appropriate path.
   - <optional note-to-self for picking back up>
   ```
 
+- **Retrospectives are transient (`RETRO.md`).** `/sdlc-retrospective` writes a
+  working `RETRO.md`, routes its findings to durable homes (**action items →
+  GitHub issues**; **durable principles → `design/overview.md` or `sdlc-common`**,
+  never an issue), then it is **deleted at close-out** — like `SESSION_STATE.md`,
+  but **not** gitignored (it lives only after the commit and is removed within the
+  same close-out). Cardinal rule: **routing must be complete before deletion** —
+  it is irreversible, since the retro is never committed. Never create a durable
+  `docs/retrospectives/` archive. (overview decision #13)
+
 ## 6. Governance matrix (who acts, who approves)
 
 | Gate | Agent | Human |

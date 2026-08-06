@@ -192,8 +192,6 @@ render "$TEMPLATES/core/setup.sh.tmpl" "$TARGET/setup.sh"
 render "$TEMPLATES/core/ci.yml.tmpl" "$TARGET/.github/workflows/ci.yml"
 
 printf '0.1.0\n' >"$TARGET/VERSION"
-mkdir -p "$TARGET/docs/retrospectives"
-: >"$TARGET/docs/retrospectives/.gitkeep"
 
 # --- license ----------------------------------------------------------------
 case "$LICENSE" in

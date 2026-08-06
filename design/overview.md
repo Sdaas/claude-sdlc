@@ -193,6 +193,23 @@ The orchestrator proposes a tier at CLASSIFY; the human confirms or overrides.
     consumer wiring is #87). This gave the profiles their **first `SKILL.md`**
     (security section only, marked *starter*; fuller profile skills and deeper
     per-stack checklists deferred — shell #84, python #85, frontend #86).
+13. **Retrospectives are transient (#81).** A retro is a working artifact, not an
+    archive — the sibling of decision #7's `SESSION_STATE.md`. `/sdlc-retrospective`
+    writes a transient **`RETRO.md`**, routes its findings to durable homes, then
+    **deletes** it at close-out. Unlike `SESSION_STATE.md` it is **not** gitignored:
+    the retro runs at close-out *after* the feature commit and is deleted within
+    the same close-out, so it never coexists with a commit — and leaving it
+    tracked-eligible gives a git recovery net against the irreversible delete. Outputs route to *two*
+    destinations: **action items → GitHub issues** (the backlog); **durable
+    principles → `design/overview.md`** decisions, or **`sdlc-common`** when the
+    principle is about the SDLC process itself (never an issue — it is not a work
+    item). Cardinal rule: **routing must be complete before deletion** (it is
+    irreversible; the retro is never committed), and each spawned issue cites its
+    origin. A permanent retro archive contradicted "Backlog = GitHub Issues" and
+    the transient/durable split: dated retros rot, and the value is the routed
+    outputs, which already have durable homes. Dropping `docs/retrospectives/`
+    from the scaffolder also **dissolves** the #56/#58-class dogfooding gap (the
+    meta-repo never had that dir) by construction rather than papering over it.
 
 ## Backlog, branching, CI, and review guide
 
