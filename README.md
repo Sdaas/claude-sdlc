@@ -192,3 +192,8 @@ The release script refuses to run on a dirty tree or a failing test suite,
 bumps `VERSION`, commits it, creates an annotated `v<version>` tag, and pushes.
 Consumers pick up the new version by re-running `./apply.sh`, which records the
 installed version and git sha in `~/.claude/.sdlc/version`.
+
+Every release is recorded in [`CHANGELOG.md`](CHANGELOG.md) (Keep a Changelog
+format). Before running `release.sh`, promote the accumulated `[Unreleased]`
+entries into a new `## [<version>] - <date>` section so consumers can see what
+changed between installs.
