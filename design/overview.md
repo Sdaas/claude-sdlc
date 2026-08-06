@@ -255,6 +255,11 @@ The orchestrator proposes a tier at CLASSIFY; the human confirms or overrides.
 - **shell** — bats (cross-shell bash+zsh), shellcheck, `bin/<tool>`, brew Formula.
 - **python** — `uv` + hatchling, `src/<pkg>` layout, stdlib argparse CLI, `ruff`
   (lint+format), pytest, `requires-python >= 3.11`. `test.sh` guards on `uv`.
+- **sql** — PostgreSQL as reference dialect (portable-first, MySQL/SQLite
+  divergence called out), `snake_case`, tool-neutral versioned migrations,
+  `sqlfluff` (lint+format), `EXPLAIN ANALYZE` for plans, pgTAP/`pg_prove` tests.
+  **No scaffolding** — a SQL change lives inside a host app repo and runs through
+  *that* repo's `test.sh`.
 - **frontend** — Vite + vanilla TypeScript (framework-neutral, no React), npm,
   Vitest, `tsc --noEmit` + `prettier --check`. `test.sh` guards on node/npm.
   Kept framework-neutral so the profile is a reusable base, not a commitment to
@@ -273,20 +278,30 @@ non-root Dockerfile) backed by a **`webapp` scaffold** (`scaffold.sh` renders
 `profile-python/templates/web/` for `--archetype webapp`) — a runnable FastAPI
 service that is born green. The shape is machine-guarded by
 `tests/test_profile_python.sh` (mirroring `tests/test_profile_common.sh`) and the
-`webapp` render is guarded by `tests/test_scaffold.sh`. The other
-profiles (shell/frontend) still carry only the **starter security checklist** (#60);
-the rest of their profile content lives in `templates/` until their F3–F5 build.
+`webapp` render is guarded by `tests/test_scaffold.sh`. **`profile-shell`
+(F3/#91) and `profile-sql` (F4/#92) are now filled to the same full skeleton** —
+each with its own comprehensive security section (shell folds in #84; **sql is
+greenfield**, absent from #84–86) and its own machine-guard test
+(`tests/test_profile_shell.sh`, `tests/test_profile_sql.sh`). `profile-sql`
+**ships no scaffolding** (a SQL change lives inside a host app repo and runs
+through *that* repo's `test.sh`). Only **`profile-frontend`** still carries the
+**starter security checklist** (#60), with the rest of its content in `templates/`
+until its F5 build.
 
-All three profiles follow one **[logging policy](logging-policy.md)** (#24):
-leveled logging (INFO default, DEBUG via `--verbose`, ERROR always) to stderr —
-stdout stays data-only — with ISO-8601 UTC timestamps. The entry-point templates
-demonstrate it, so every scaffolded project is born compliant.
+Every profile follows one **[logging policy](logging-policy.md)** (#24): leveled
+logging (INFO default, DEBUG via `--verbose`, ERROR always) to stderr — stdout
+stays data-only — with ISO-8601 UTC timestamps. The scaffolded profiles
+(shell/python) demonstrate it in their entry-point templates so every generated
+project is born compliant; `profile-sql` renders the same policy onto the
+database server's slow-query logging (`log_min_duration_statement`, `auto_explain`).
 
 ## Out of scope (for now)
 
 - Model/token-usage optimization (deferred).
-- Rich SQL profile, and a richer front-end profile (React/component testing,
-  ESLint, publish flow) — the current front-end profile is a lightweight first
-  pass, improved next iteration.
+- A richer front-end profile (React/component testing, ESLint, publish flow) —
+  the current front-end profile is a lightweight first pass, improved next
+  iteration.
+- Standalone SQL scaffolding (a migrations skeleton / seed harness) — `profile-sql`
+  ships as guidance only in v1; SQL work lives inside a host app repo.
 - Migrating the existing global shell skills into `profile-shell` (kept working
   standalone until `profile-shell` is proven).
