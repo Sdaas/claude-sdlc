@@ -43,3 +43,16 @@ cross-profile consistency, which is the whole point of a backbone.
   separate artifacts.
 - A dimension that is genuinely N/A for a stack states "N/A — why", it does not
   drop the section (keeps the shape intact).
+
+## Amendment (2026-08-06, #89 — build of F1)
+
+The Decision above enumerates **five** dimensions, but that list under-counts:
+the capability map (`architecture/overview.md §1`) carries **CAP-6 Observability &
+logging** (serves **UC-009**) as a first-class quality dimension, and the
+container diagram already routes an "observability dimension" to
+`design/logging-policy.md`. A five-section skeleton would leave UC-009 without a
+home and break the "nothing floats" gate. **The skeleton therefore has six
+dimensions:** Best practices · Performance & scale · Testing pyramid · Security ·
+Reliability & resilience · **Observability & logging**. Security delegates to
+`sdlc-security`; Observability renders `design/logging-policy.md`. The rest of this
+ADR (Option B, the N/A rule, absorbing #84/85/86) is unchanged.

@@ -36,11 +36,11 @@ agent loads.
 
 | Component | New/existing | Built from | Owns |
 |---|---|---|---|
-| **`profile-common`** (skill) | **new** | CAP-10, CAP-8 | The `SKILL.md` structure every profile follows; the 5-dimension convention; the **cross-profile testing** guidance (CAP-8); pointers to shared policies (`sdlc-security`, `design/logging-policy.md`). Backbone — mirrors `sdlc-common`. |
-| **`profile-shell`** (skill) | enhance existing dir | CAP-1–7 | Shell rendering of all 5 dimensions + scaffolding (CAP-7). References shipped shell skills (non-goal: don't absorb them). |
-| **`profile-python`** (skill) | enhance existing dir | CAP-1–7 | Python rendering of all 5 dimensions + scaffolding (CAP-7). |
-| **`profile-sql`** (skill) | **new (greenfield)** | CAP-1–6 | SQL rendering of all 5 dimensions (no CAP-7 scaffolding). |
-| **`profile-frontend`** (skill) | enhance existing dir | CAP-1–6 | Frontend rendering of all 5 dimensions (no CAP-7 scaffolding). |
+| **`profile-common`** (skill) | **new** | CAP-10, CAP-8 | The `SKILL.md` structure every profile follows; the 6-dimension convention (ADR-0001, amended #89 — Observability is its own dimension); the **cross-profile testing** guidance (CAP-8); pointers to shared policies (`sdlc-security`, `design/logging-policy.md`). Backbone — mirrors `sdlc-common`. |
+| **`profile-shell`** (skill) | enhance existing dir | CAP-1–7 | Shell rendering of all 6 dimensions + scaffolding (CAP-7). References shipped shell skills (non-goal: don't absorb them). |
+| **`profile-python`** (skill) | enhance existing dir | CAP-1–7 | Python rendering of all 6 dimensions + scaffolding (CAP-7). |
+| **`profile-sql`** (skill) | **new (greenfield)** | CAP-1–6 | SQL rendering of all 6 dimensions (no CAP-7 scaffolding). |
+| **`profile-frontend`** (skill) | enhance existing dir | CAP-1–6 | Frontend rendering of all 6 dimensions (no CAP-7 scaffolding). |
 | **Command integration** | edit existing | CAP-9 | `/sdlc-feature`, `/sdlc-newproject`, `/sdlc-harden`, `sdlc-common` load & apply the profile at the right gates. |
 | **`templates/`** (dirs) | existing, aligned | CAP-7 | Scaffolding for shell/python, aligned to the new standards. |
 
