@@ -207,6 +207,51 @@ test_python_profile_files() {
 	rm -rf "$(dirname "$tgt")"
 }
 
+scaffold_web() { # target [extra args...]
+	"$SCAFFOLD" --target "$1" --name "my-api" \
+		--purpose "Serve widgets over HTTP." --profile python \
+		--archetype webapp --distribution none --license mit \
+		--author "Ada Lovelace" "${@:2}"
+}
+
+# --- Test 8b: python webapp archetype generates a FastAPI service -----------
+test_python_webapp_profile() {
+	start "python webapp archetype generates FastAPI app, auth, settings, tests, Dockerfile"
+	local tgt; tgt="$(mktemp -d)/proj"
+	scaffold_web "$tgt" >/dev/null 2>&1
+	assert_exists "$tgt/src/my_api/app.py" "app.py exists"
+	assert_exists "$tgt/src/my_api/auth.py" "auth.py exists"
+	assert_exists "$tgt/src/my_api/settings.py" "settings.py exists"
+	assert_exists "$tgt/tests/test_app.py" "API test module exists"
+	assert_exists "$tgt/Dockerfile" "Dockerfile exists"
+	assert_contains "$tgt/src/my_api/app.py" "FastAPI" "app uses FastAPI"
+	assert_contains "$tgt/src/my_api/app.py" "/healthz" "app exposes /healthz"
+	assert_contains "$tgt/src/my_api/app.py" "/readyz" "app exposes /readyz"
+	assert_contains "$tgt/src/my_api/auth.py" "Depends" "auth wired as a dependency"
+	assert_contains "$tgt/pyproject.toml" "fastapi" "pyproject pulls fastapi"
+	assert_contains "$tgt/pyproject.toml" "uvicorn" "pyproject pulls uvicorn"
+	assert_contains "$tgt/Dockerfile" "USER" "Dockerfile drops to a non-root USER"
+	assert_absent_str "$tgt/src/my_api/app.py" "{{" "no leftover placeholders in app.py"
+	assert_absent_str "$tgt/pyproject.toml" "{{" "no leftover placeholders in webapp pyproject"
+	# webapp is a service, not a CLI — no cli.py entry point
+	assert_not_exists "$tgt/src/my_api/cli.py" "no cli.py for the webapp archetype"
+	rm -rf "$(dirname "$tgt")"
+}
+
+# --- Test 8c: generated FastAPI app is valid, importable python -------------
+test_python_webapp_compiles() {
+	start "generated webapp python compiles (py_compile) and imports the app"
+	command -v python3 >/dev/null 2>&1 || { pass "python3 absent — skipped"; return; }
+	local tgt; tgt="$(mktemp -d)/proj"
+	scaffold_web "$tgt" >/dev/null 2>&1
+	if python3 -m py_compile "$tgt"/src/my_api/*.py "$tgt"/tests/test_app.py 2>/dev/null; then
+		pass "generated webapp modules byte-compile"
+	else
+		fail "generated webapp modules failed py_compile"
+	fi
+	rm -rf "$(dirname "$tgt")"
+}
+
 # --- Test 9: python test.sh guards on uv (dev dependency) --------------------
 test_python_uv_guard() {
 	start "generated python test.sh checks uv and runs pytest"
@@ -456,6 +501,8 @@ test_bats_dependency_guard
 test_formula_conditional
 test_generated_shellcheck
 test_python_profile_files
+test_python_webapp_profile
+test_python_webapp_compiles
 test_python_uv_guard
 test_setup_deps_python
 test_python_generated_shellcheck

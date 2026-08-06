@@ -260,9 +260,22 @@ The orchestrator proposes a tier at CLASSIFY; the human confirms or overrides.
   Kept framework-neutral so the profile is a reusable base, not a commitment to
   React for every front-end project.
 
-Each profile now also has a `SKILL.md` carrying a **starter security checklist**
-(#60) that `sdlc-security` and `/sdlc-harden` delegate to; the rest of the profile
-content still lives in `templates/`.
+Each profile has a `SKILL.md` that clones the **[`profile-common`](../payload/skills/profile-common/SKILL.md)
+backbone** (F1/#89, [ADR-0001](../architecture/decisions/0001-profile-skill-structure.md)) —
+six fixed quality dimensions in a fixed order. **`profile-python`
+is the pilot: the first profile filled to the full skeleton** (F2/#90), the reference
+pattern F3–F5 clone. Its security dimension is the fleshed-out Python checklist (#85,
+subsumed by #90): each check mapped to its Bandit/ruff-`S` code, scanned via
+`ruff check --select S` + `pip-audit`. It also standardizes **Python app servers**: a `## Web / API service` section
+(FastAPI + uvicorn/gunicorn, JWT-bearer/API-key/session auth via `Depends`,
+pydantic-settings 12-factor config, SQLAlchemy/Alembic, `/healthz`+`/readyz`,
+non-root Dockerfile) backed by a **`webapp` scaffold** (`scaffold.sh` renders
+`profile-python/templates/web/` for `--archetype webapp`) — a runnable FastAPI
+service that is born green. The shape is machine-guarded by
+`tests/test_profile_python.sh` (mirroring `tests/test_profile_common.sh`) and the
+`webapp` render is guarded by `tests/test_scaffold.sh`. The other
+profiles (shell/frontend) still carry only the **starter security checklist** (#60);
+the rest of their profile content lives in `templates/` until their F3–F5 build.
 
 All three profiles follow one **[logging policy](logging-policy.md)** (#24):
 leveled logging (INFO default, DEBUG via `--verbose`, ERROR always) to stderr —

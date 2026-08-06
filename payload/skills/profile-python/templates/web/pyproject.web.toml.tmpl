@@ -1,0 +1,52 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "{{NAME}}"
+version = "0.1.0"
+description = "{{PURPOSE}}"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "{{AUTHOR}}" }]
+# Web service deps. Add SQLAlchemy>=2 + alembic when you introduce a database
+# (see the profile-python `## Web / API service` DB/ORM standard).
+dependencies = [
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.30",
+    "gunicorn>=22",
+    "pydantic-settings>=2",
+    "PyJWT>=2.9",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "ruff>=0.6", "httpx>=0.27"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/{{PKG}}"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+# A web service turns on the security rules (S = flake8-bandit) by default —
+# this is the security-forward archetype. See profile-python `## 4. Security`.
+select = ["E", "F", "I", "UP", "B", "S"]
+
+[tool.ruff.lint.flake8-bugbear]
+# FastAPI's dependency-injection idiom is `Depends(...)` / `Security(...)` in an
+# argument default — intended, not the B008 mutable-default bug. Whitelist them.
+extend-immutable-calls = ["fastapi.Depends", "fastapi.Security"]
+
+[tool.ruff.lint.per-file-ignores]
+# Tests legitimately use `assert` (S101) and hard-coded test tokens (S105/S106).
+"tests/**" = ["S101", "S105", "S106"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+markers = [
+    "integration: real-boundary test (a live service, secrets, a GPU). Opt-in — excluded from the default run; run it with ./test.sh --integration. Self-skip when the boundary is absent so the local pre-push lane stays non-blocking.",
+]

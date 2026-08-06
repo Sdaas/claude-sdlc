@@ -116,10 +116,21 @@ render_python_profile() {
 	local pt
 	pt="$(dirname "$SCRIPT_DIR")/profile-python/templates"
 	[[ -d "$pt" ]] || die "no profile-python templates at: $pt"
-	render "$pt/pyproject.toml.tmpl" "$TARGET/pyproject.toml"
 	render "$pt/init.py.tmpl" "$TARGET/src/$PKG/__init__.py"
-	render "$pt/cli.py.tmpl" "$TARGET/src/$PKG/cli.py"
-	render "$pt/test-pkg.py.tmpl" "$TARGET/tests/test_$PKG.py"
+	if [[ "$ARCHETYPE" == "webapp" ]]; then
+		# FastAPI service scaffold — profile-python `## Web / API service`.
+		render "$pt/web/pyproject.web.toml.tmpl" "$TARGET/pyproject.toml"
+		render "$pt/web/settings.py.tmpl" "$TARGET/src/$PKG/settings.py"
+		render "$pt/web/auth.py.tmpl" "$TARGET/src/$PKG/auth.py"
+		render "$pt/web/app.py.tmpl" "$TARGET/src/$PKG/app.py"
+		render "$pt/web/test_app.py.tmpl" "$TARGET/tests/test_app.py"
+		render "$pt/web/Dockerfile.tmpl" "$TARGET/Dockerfile"
+	else
+		# CLI / library scaffold (the default).
+		render "$pt/pyproject.toml.tmpl" "$TARGET/pyproject.toml"
+		render "$pt/cli.py.tmpl" "$TARGET/src/$PKG/cli.py"
+		render "$pt/test-pkg.py.tmpl" "$TARGET/tests/test_$PKG.py"
+	fi
 	render "$pt/test.sh.tmpl" "$TARGET/test.sh"
 	render "$pt/release.sh.tmpl" "$TARGET/release.sh"
 	# Python CI installs uv — overrides the generic core CI.

@@ -1,0 +1,54 @@
+"""Authentication for {{NAME}} — JWT bearer reference scheme.
+
+`require_principal` is the SINGLE server-side authorization enforcement point:
+every privileged endpoint declares `Depends(require_principal)`, so authorization
+is never left to the client. The API-key and session-cookie schemes plug in the
+same way (sibling dependencies) — see the profile-python `## Web / API service`
+section for those patterns.
+"""
+
+from dataclasses import dataclass, field
+
+import jwt
+from fastapi import Depends, HTTPException, status
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+
+from .settings import Settings, get_settings
+
+# auto_error=False so we raise our own 401 (and never leak *why* auth failed).
+_bearer = HTTPBearer(auto_error=False)
+
+
+@dataclass
+class Principal:
+    """The authenticated caller."""
+
+    subject: str
+    scopes: list[str] = field(default_factory=list)
+
+
+def require_principal(
+    creds: HTTPAuthorizationCredentials | None = Depends(_bearer),
+    settings: Settings = Depends(get_settings),
+) -> Principal:
+    """Verify the bearer token; return the caller or raise 401.
+
+    Add scope/role checks here (or compose a `require_scope(...)` dependency on
+    top) — this is where authz decisions live.
+    """
+    if not settings.jwt_secret:
+        # Fail closed on misconfiguration — never verify against an empty key
+        # (an unset secret would otherwise accept attacker-forged tokens).
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "auth not configured")
+    if creds is None:
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "missing bearer token")
+    try:
+        claims = jwt.decode(
+            creds.credentials,
+            settings.jwt_secret,
+            algorithms=[settings.jwt_algorithm],
+        )
+    except jwt.PyJWTError:
+        # Fail closed; do not disclose the reason (info-leak, sdlc-security §2.6).
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "invalid token") from None
+    return Principal(subject=claims.get("sub", ""), scopes=claims.get("scopes", []))

@@ -1,0 +1,32 @@
+"""Configuration for {{NAME}} — 12-factor: read from the environment.
+
+Secrets (JWT signing key, DB URL) are NEVER hard-coded — they come from env
+vars prefixed `{{PKG}}_` (e.g. `{{PKG}}_JWT_SECRET`). See the profile-python
+`## Web / API service` section and the `## 4. Security` checklist.
+"""
+
+from functools import lru_cache
+
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+class Settings(BaseSettings):
+    model_config = SettingsConfigDict(env_prefix="{{PKG}}_", case_sensitive=False)
+
+    # Auth — JWT bearer reference scheme.
+    jwt_secret: str = ""  # MUST be set from env in any real deployment.
+    jwt_algorithm: str = "HS256"
+
+    # CORS — an explicit allow-list, never "*" (see §4 Security).
+    cors_origins: list[str] = []
+
+    # Downstream dependencies (readiness checks these).
+    database_url: str = ""
+
+    env: str = "development"
+
+
+@lru_cache
+def get_settings() -> Settings:
+    """Cached accessor so config is read once per process."""
+    return Settings()
