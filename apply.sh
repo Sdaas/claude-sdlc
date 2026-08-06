@@ -128,6 +128,10 @@ recorded_sha() {
 # following a symlink at $dest and writing through it to outside --target (#77).
 write_file() {
 	local src="$PAYLOAD/$1" dest="$TARGET/$1"
+	# Defense in depth: install classification already refuses escaping paths
+	# before any write, but never let a caller write through a symlinked parent
+	# that escapes --target (#83).
+	within_target "$dest" || die "refusing to write $1: parent directory escapes --target"
 	mkdir -p "$(dirname "$dest")"
 	rm -f "$dest"
 	cp "$src" "$dest"
@@ -141,6 +145,24 @@ prune_empty() {
 		rmdir "$dir" 2>/dev/null || break
 		dir="$(dirname "$dir")"
 	done
+}
+
+# True if $1's location resolves INSIDE $TARGET. #77 stopped a symlink AT a
+# payload path from redirecting a write/remove outside --target; this guards the
+# sibling hole (#83): a symlinked PARENT directory. We climb to the nearest
+# existing ancestor of $1's parent and resolve it with `pwd -P` (bash-3.2-safe,
+# no realpath) — so any symlinked component that points outside --target makes
+# the resolved location fall outside $TARGET and this returns non-zero. Both
+# sides use `pwd -P`, so a legitimately symlinked $TARGET root still matches.
+within_target() {
+	local p="$1" dir troot resolved
+	dir="$(dirname "$p")"
+	while [[ ! -d "$dir" && "$dir" != "/" && "$dir" != "." ]]; do
+		dir="$(dirname "$dir")"
+	done
+	resolved="$(cd "$dir" 2>/dev/null && pwd -P)" || return 1
+	troot="$(cd "$TARGET" 2>/dev/null && pwd -P)" || return 1
+	[[ "$resolved" == "$troot" || "$resolved" == "$troot"/* ]]
 }
 
 # --- argument parsing -------------------------------------------------------
@@ -293,6 +315,10 @@ if [[ "$MODE" == "uninstall" ]]; then
 				log "preserved (locally modified) $rel"
 				continue
 			fi
+			if ! within_target "$local_path"; then
+				printf 'apply.sh: refusing to remove %s: escapes --target (symlinked parent)\n' "$rel" >&2
+				continue
+			fi
 			rm -f "$local_path"
 			log "removed $rel"
 			prune_empty "$(dirname "$local_path")"
@@ -329,6 +355,7 @@ NEW_LIST="${NEW_LIST%$'\n'}"
 OLD_PATHS="$(manifest_paths "$OLD_MANIFEST")"
 COLLISIONS=""
 DRIFTED=""
+ESCAPED=""
 ADD_LIST=""
 UPDATE_LIST=""
 UNCHANGED_LIST=""
@@ -336,6 +363,14 @@ while IFS= read -r rel; do
 	[[ -n "$rel" ]] || continue
 	src="$PAYLOAD/$rel"
 	dest="$TARGET/$rel"
+
+	# Refuse before classifying: if a parent directory of dest is a symlink that
+	# escapes --target, -e/-L below would resolve THROUGH it and route the path to
+	# a silent add-through outside --target (#83, the parent-dir sibling of #77).
+	if ! within_target "$dest"; then
+		ESCAPED+="$rel"$'\n'
+		continue
+	fi
 
 	# -L as well as -e: a dangling symlink is invisible to -e, and treating it as
 	# a fresh add would let write_file's cp follow it outside --target (#77). A
@@ -374,8 +409,15 @@ while IFS= read -r rel; do
 	fi
 done <<<"$NEW_LIST"
 
-if [[ -n "$DRIFTED" || -n "$COLLISIONS" ]]; then
+if [[ -n "$DRIFTED" || -n "$COLLISIONS" || -n "$ESCAPED" ]]; then
 	{
+		if [[ -n "$ESCAPED" ]]; then
+			echo "apply.sh: refusing to write through a symlinked parent that escapes --target:"
+			printf '%s' "$ESCAPED" | sed 's/^/  - /'
+			echo "A parent directory under --target resolves outside it. Remove the symlink"
+			echo "and re-run; --force will NOT override this (it protects against writes"
+			echo "outside --target)."
+		fi
 		if [[ -n "$DRIFTED" ]]; then
 			echo "apply.sh: refusing to overwrite locally modified files:"
 			printf '%s' "$DRIFTED" | sed 's/^/  - /'
@@ -460,6 +502,10 @@ if [[ -n "$STALE" ]]; then
 				KEPT_STALE+="$rel"$'\n'
 				REMOVE_COUNT=$((REMOVE_COUNT - 1))
 				log "kept locally modified $rel (no longer in payload)"
+				continue
+			fi
+			if ! within_target "$dest"; then
+				printf 'apply.sh: refusing to remove stale %s: escapes --target (symlinked parent)\n' "$rel" >&2
 				continue
 			fi
 			rm -f "$dest"
