@@ -145,6 +145,9 @@ After approval:
 
 - Close (or update) the GitHub issue (note the root cause and the regression test).
 - Full tier: run a short retrospective (`/sdlc-retrospective`) and record lessons.
+- Delete the transient `SESSION_STATE.md`. If a retrospective was run, ensure its
+  findings are routed (issues / `design/overview.md` / `sdlc-common`) and delete
+  the transient `RETRO.md` — routing must be complete first (`sdlc-common` §5).
 
 ---
 

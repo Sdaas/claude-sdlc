@@ -22,6 +22,7 @@ fail() {
 }
 assert_eq() { if [[ "$1" == "$2" ]]; then pass "$3"; else fail "expected [$1] got [$2] — $3"; fi; }
 assert_exists() { if [[ -e "$1" ]]; then pass "$2"; else fail "missing: $1 — $2"; fi; }
+assert_not_exists() { if [[ ! -e "$1" ]]; then pass "$2"; else fail "should not exist: $1 — $2"; fi; }
 assert_exec() { if [[ -x "$1" ]]; then pass "$2"; else fail "not executable: $1 — $2"; fi; }
 assert_contains() {
 	local got
@@ -58,7 +59,7 @@ test_core_files() {
 	assert_exists "$tgt/VERSION" "VERSION exists"
 	assert_exists "$tgt/CLAUDE.md" "CLAUDE.md exists"
 	assert_exists "$tgt/design/overview.md" "design/overview.md exists"
-	assert_exists "$tgt/docs/retrospectives" "docs/retrospectives exists"
+	assert_not_exists "$tgt/docs/retrospectives" "docs/retrospectives NOT created (retros are transient, #81)"
 	assert_exists "$tgt/.github/workflows/ci.yml" "CI workflow exists"
 	assert_exec "$tgt/hooks/pre-push" "pre-push hook is executable"
 	assert_exec "$tgt/install-hooks.sh" "install-hooks.sh is executable"

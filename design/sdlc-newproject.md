@@ -55,7 +55,6 @@ LICENSE              # per choice
 VERSION              # 0.1.0
 CLAUDE.md            # stack marker (archetype/profile/distribution) + pointer to SDLC
 design/overview.md   # Purpose, Architecture (TBD), Key Decisions, Constraints
-docs/retrospectives/ # session retros land here
 hooks/pre-push       # blocks push unless test.sh is green
 install-hooks.sh
 .github/workflows/ci.yml

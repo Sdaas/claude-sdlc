@@ -1,23 +1,37 @@
 # /sdlc-retrospective — reflect on a change or a session, and record the lessons
 
 Triggered by `/sdlc-retrospective feature`, `/sdlc-retrospective session`, or
-bare `/sdlc-retrospective`. Runs a short, gated reflection and writes **one**
-durable markdown doc into the **working repo's** `docs/retrospectives/`.
+bare `/sdlc-retrospective`. Runs a short, gated reflection into a **transient**
+working retro (`RETRO.md` at the repo root, mirroring `SESSION_STATE.md`), routes
+its findings to their durable homes, then **deletes** it. A retro is a working
+artifact, not an archive — the value is the routed outputs, which live elsewhere.
 
 **First, load the `sdlc-common` skill** — it defines the governance matrix and
-the hard conventions (backlog = GitHub Issues, review before commit) this command
-respects.
+the hard conventions (backlog = GitHub Issues, review before commit, the
+transient/durable split of decision #7) this command respects.
 
-**This command reflects, writes one doc, and points — nothing more.** It does
-not branch, fix, run other gates, or commit. Committing the doc is left to the
-surrounding `/sdlc-feature` / `/sdlc-bugfix` close-out or to the human (rule #10).
+**This command reflects, routes, and points — nothing more.** It does not branch,
+fix, run other gates, or commit. Its outputs route to two durable destinations
+(never a permanent retro doc):
+
+- **Action items** ("do X") → **GitHub issues** (the backlog).
+- **Durable principles** ("from now on always Y") → **`design/overview.md`**
+  decisions, or **`sdlc-common`** when the principle is about the SDLC process
+  itself (not a work item, so never an issue).
+
+**Cardinal rule: routing must be complete before deletion.** The transient
+`RETRO.md` is deleted only after every finding has landed in its durable home —
+deletion is irreversible (the retro is never committed). Deletion happens at
+**close-out**: the surrounding `/sdlc-feature` / `/sdlc-bugfix` close-out removes
+`RETRO.md` (like `SESSION_STATE.md`); when this command is run **standalone**
+(no owning workflow), it deletes `RETRO.md` itself at the end.
 
 **Two modes:**
 
-| Mode | Lens | Doc written |
+| Mode | Lens | Working retro |
 |---|---|---|
-| **feature** | The change just shipped — outcome vs. acceptance criteria, what went well, friction, lessons. Usually invoked at Full-tier close-out, or ad hoc. | `docs/retrospectives/YYYY-MM-DD-feature-<issue>.md` |
-| **session** | The work *session*, with an SDLC-improvement lens — what went wrong → which gate/command caused friction → how to improve the workflow. | `docs/retrospectives/YYYY-MM-DD-session.md` |
+| **feature** | The change just shipped — outcome vs. acceptance criteria, what went well, friction, lessons. Usually invoked at Full-tier close-out, or ad hoc. | `RETRO.md` |
+| **session** | The work *session*, with an SDLC-improvement lens — what went wrong → which gate/command caused friction → how to improve the workflow. | `RETRO.md` |
 
 ---
 
@@ -65,28 +79,15 @@ Distill the answers into a few **durable, curated lessons** — the signal, not 
 transcript. Each lesson: what happened → what to do differently. Tie feature
 lessons back to acceptance criteria where relevant.
 
-## Gate 4 — FOLLOW-UPS
+## Gate 4 — WRITE (transient)
 
-Turn actionable lessons into candidate follow-ups (e.g. "add a boundary-inventory
-step to `/sdlc-harden`", "clarify the VERIFY skip rule"). For each one:
-- **Propose** it and ask whether to **file it as a GitHub issue** now (or to
-  point at `/sdlc-feedback` to file it). File **only** on explicit per-item
-  approval — one confirmation per item; never auto-file, never file silently.
-- If the human declines, the item stays recorded in the doc.
-
-When filing, use `gh issue create` with a clear title and a `type:*`/`path:*`
-label read live from `gh label list` (never hard-code the set). Record any
-created issue's number/URL in the doc's Follow-ups section.
-
-## Gate 5 — WRITE
-
-Create `docs/retrospectives/` if it does not exist, then write the doc with the
-mode's filename. Use `<issue>` = the slug for feature mode; today's date for the
-date. Templates:
+Write the working retro to `RETRO.md` at the repo root — the transient scratch
+where the reflection is captured before it is routed. Do **not** create
+`docs/retrospectives/` or any dated archive. Use the mode's template:
 
 **feature retro**
 ```
-# Feature retro — #<issue>: <title>
+# Feature retro (transient) — #<issue>: <title>
 
 _Date: <YYYY-MM-DD> · Branch: <branch> · Tier: <tier>_
 
@@ -105,13 +106,14 @@ _Date: <YYYY-MM-DD> · Branch: <branch> · Tier: <tier>_
 ## Lessons
 - <what happened → what to do differently>
 
-## Follow-ups
-- <action> — filed as #<n> / not filed
+## Routing (filled in at Gate 5)
+- <action> → issue #<n> / not filed
+- <principle> → design/overview.md / sdlc-common / not adopted
 ```
 
 **session retro**
 ```
-# Session retro — <YYYY-MM-DD>
+# Session retro (transient) — <YYYY-MM-DD>
 
 ## Session summary
 <what the session covered>
@@ -122,28 +124,57 @@ _Date: <YYYY-MM-DD> · Branch: <branch> · Tier: <tier>_
 ## Which gate or command
 - <gate/command> — <what was missing or fought us>
 
-## Proposed SDLC improvements
-- <change to a command/skill/convention>
+## Lessons
+- <what happened → what to do differently>
 
-## Follow-ups
-- <action> — filed as #<n> / not filed
+## Routing (filled in at Gate 5)
+- <action> → issue #<n> / not filed
+- <principle> → design/overview.md / sdlc-common / not adopted
 ```
 
-## Gate 6 — POINT & STOP
+## Gate 5 — ROUTE (dual destinations)
 
-Show the written doc's **path** and a short summary of the lessons and any filed
-issues. Note that committing the doc is the human's / close-out's job. **Do not
-commit.** Stop here.
+Route each lesson to its durable home. **Propose each item and act only on
+explicit per-item approval** — one confirmation per item; never auto-route,
+never route silently. Record the destination back into `RETRO.md`'s Routing
+section as you go.
+
+- **Action item** ("do X") → **GitHub issue**. Use `gh issue create` with a clear
+  title and a `type:*`/`path:*` label read live from `gh label list` (never
+  hard-code the set). **Cite the origin** in the body (e.g. "from session retro
+  2026-08-06") for traceability. Or point at `/sdlc-feedback` to file it.
+- **Durable principle** ("from now on always Y") → a **`design/overview.md`**
+  decision, or **`sdlc-common`** when it is about the SDLC process itself. This
+  is a principle, not a work item, so it is **never** filed as an issue. Present
+  the exact edit; apply it on approval.
+- If the human declines an item, note it as "not filed / not adopted" — it is
+  captured in `RETRO.md`, but `RETRO.md` is deleted at close-out, so a declined
+  item is intentionally not preserved.
+
+## Gate 6 — POINT & CLOSE
+
+Show a short summary of the lessons, the issues filed, and the design/`sdlc-common`
+edits made. Confirm routing is complete. Then:
+
+- **Standalone run:** delete `RETRO.md` now (routing is complete).
+- **From a `/sdlc-feature` / `/sdlc-bugfix` close-out:** leave `RETRO.md` for the
+  close-out gate to delete (it removes `RETRO.md` alongside `SESSION_STATE.md`).
+
+**Do not commit.** Stop here.
 
 ---
 
 ## Rules
 
-- Advisory: reflect, write one doc, point — never branch, fix, run other gates,
-  or commit.
+- Advisory: reflect, route, point — never branch, fix, run other gates, or commit.
 - One command, two modes; confirm the inferred mode when no argument is given.
-- Follow-ups are **proposed**; file as issues only on explicit per-item approval.
-  Read labels live (`gh label list`); never hard-code them.
+- **Transient:** the retro is `RETRO.md` (working scratch), not a durable doc.
+  Never create `docs/retrospectives/` or a dated archive.
+- **Route before delete** (cardinal rule): every finding lands in a durable home
+  — issues (actions) or `design/overview.md` / `sdlc-common` (principles) —
+  before `RETRO.md` is deleted. Deletion happens at close-out (standalone runs
+  delete it themselves).
+- Routing is **proposed**; act only on explicit per-item approval. Read labels
+  live (`gh label list`); never hard-code them. Cite the retro origin on each
+  filed issue.
 - Curated lessons, not a transcript. Say the signal.
-- Writes to the **working repo's** `docs/retrospectives/`.
-- When the scope or mode is ambiguous, ask — do not guess.
