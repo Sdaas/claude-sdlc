@@ -36,6 +36,10 @@ Never start implementing before the human confirms the classification.
 
 Propose a tier; the human confirms or overrides.
 
+The Full-tier **security-review** is not a vibe check: load the **`sdlc-security`**
+skill, which walks the harness `/security-review` plus a boundary-keyed checklist
+and emits specific findings (§6 governance: *Code / security review*).
+
 ## 3. Paths (how "implement" happens)
 
 - **CODE path** — behavior/logic. **Test-first**: write a failing test → confirm

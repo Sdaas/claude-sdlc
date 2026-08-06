@@ -173,6 +173,19 @@ The orchestrator proposes a tier at CLASSIFY; the human confirms or overrides.
     `harden-shell-repo` skill (folding that into `profile-shell` is deferred to
     #21). The workflow lives in a `sdlc-harden` skill; the command is a thin
     gate-walker. Generalizes `harden-shell-repo` from shell to all profiles.
+12. **Security-review gate has real content (#60).** The Full-tier
+    security-review pass is a concrete skill, **`sdlc-security`**, not "also a
+    security-review pass". It runs the harness **`/security-review`** on the diff
+    **and** walks a stack-agnostic **six-category checklist** (input/injection ·
+    secrets · authz · filesystem/path · dependency · info-leak) **keyed to the
+    change's boundary inventory**, emitting **specific findings** (severity ·
+    category · boundary → fix) — never a bare "looks fine". Same
+    **core-delegates-to-profile** shape as harden (#11): the stack-specific checks
+    live in each profile's `## Security checklist` section, so `sdlc-security` and
+    `/sdlc-harden` share **one** source of profile-security truth (harden's
+    consumer wiring is #87). This gave the profiles their **first `SKILL.md`**
+    (security section only, marked *starter*; fuller profile skills and deeper
+    per-stack checklists deferred — shell #84, python #85, frontend #86).
 
 ## Backlog, branching, CI, and review guide
 
@@ -222,6 +235,10 @@ The orchestrator proposes a tier at CLASSIFY; the human confirms or overrides.
   Vitest, `tsc --noEmit` + `prettier --check`. `test.sh` guards on node/npm.
   Kept framework-neutral so the profile is a reusable base, not a commitment to
   React for every front-end project.
+
+Each profile now also has a `SKILL.md` carrying a **starter security checklist**
+(#60) that `sdlc-security` and `/sdlc-harden` delegate to; the rest of the profile
+content still lives in `templates/`.
 
 All three profiles follow one **[logging policy](logging-policy.md)** (#24):
 leveled logging (INFO default, DEBUG via `--verbose`, ERROR always) to stderr —

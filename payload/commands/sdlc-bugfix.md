@@ -115,7 +115,13 @@ Not Done until this passes. If the real symptom persists, go back to IMPLEMENT.
 
 Two-pass review of the change (prose: checklist review). Confirm no new
 regressions and that the root cause — not just the reported symptom — is closed.
-Fix findings. (Full tier: also a **security-review** pass.)
+Fix findings.
+
+**Full tier — security-review pass:** load the `sdlc-security` skill and run its
+pass — invoke the harness `/security-review` on the diff **and** walk the
+`sdlc-security` checklist against the Gate 2 boundary inventory (with the matching
+profile's security section). Produce **specific findings** in the skill's format,
+not "looks fine"; fix HIGH/MED before proceeding.
 
 ## Gate 7 — REVIEW GUIDE
 
