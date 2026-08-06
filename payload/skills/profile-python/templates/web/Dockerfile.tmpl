@@ -1,0 +1,24 @@
+# Container image for {{NAME}} — a FastAPI service.
+# Standards (profile-python `## Web / API service`): pinned slim base, a
+# non-root runtime user, gunicorn + uvicorn worker, a HEALTHCHECK on /healthz.
+
+FROM python:3.11-slim
+
+# Run as an unprivileged user, never root.
+RUN useradd --create-home --uid 10001 appuser
+WORKDIR /app
+
+# Install the package (and its pinned deps) from the build metadata.
+COPY pyproject.toml ./
+COPY src/ ./src/
+RUN pip install --no-cache-dir .
+
+USER appuser
+EXPOSE 8000
+
+# Liveness probe hits the app's own /healthz (0.0.0.0 bind is expected in a
+# container — the process is isolated, not exposed to the host network).
+HEALTHCHECK --interval=30s --timeout=3s --retries=3 \
+    CMD python -c "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/healthz').status == 200 else 1)"
+
+CMD ["gunicorn", "{{PKG}}.app:app", "-k", "uvicorn.workers.UvicornWorker", "-b", "0.0.0.0:8000"]

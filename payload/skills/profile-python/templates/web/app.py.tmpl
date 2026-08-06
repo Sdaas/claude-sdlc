@@ -1,0 +1,85 @@
+"""FastAPI application for {{NAME}}.
+
+Run (dev):   uvicorn {{PKG}}.app:app --reload
+Run (prod):  gunicorn {{PKG}}.app:app -k uvicorn.workers.UvicornWorker -b 0.0.0.0:8000
+
+Logging renders design/logging-policy.md: leveled logging to stderr, ISO-8601
+UTC timestamps; stdout stays clean for real data.
+"""
+
+import logging
+import sys
+import time
+
+from fastapi import Depends, FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from starlette.requests import Request
+
+from .auth import Principal, require_principal
+from .settings import get_settings
+
+# --- logging (design/logging-policy.md): stderr, UTC, ISO-8601 --------------
+logging.Formatter.converter = time.gmtime
+_handler = logging.StreamHandler(sys.stderr)
+_handler.setFormatter(
+    logging.Formatter(
+        "%(asctime)s %(levelname)s %(name)s: %(message)s",
+        datefmt="%Y-%m-%dT%H:%M:%SZ",
+    )
+)
+log = logging.getLogger("{{PKG}}")
+log.addHandler(_handler)
+log.setLevel(logging.INFO)  # raise to DEBUG via the deployment's log config.
+
+settings = get_settings()
+
+app = FastAPI(title="{{NAME}}")
+
+# CORS: an explicit allow-list (never "*"), so a browser can't be tricked into
+# using a caller's credentials from an untrusted origin (§4 Security).
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.cors_origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    """One INFO line per request (method, path, status, duration)."""
+    started = time.monotonic()
+    response = await call_next(request)
+    elapsed_ms = (time.monotonic() - started) * 1000
+    log.info(
+        "%s %s -> %d (%.1fms)",
+        request.method,
+        request.url.path,
+        response.status_code,
+        elapsed_ms,
+    )
+    return response
+
+
+@app.get("/healthz")
+def healthz() -> dict[str, str]:
+    """Liveness: the process is up. No dependency checks (never fails on a dep)."""
+    return {"status": "ok"}
+
+
+@app.get("/readyz")
+def readyz() -> JSONResponse:
+    """Readiness: dependencies are configured/reachable. 503 until ready.
+
+    Extend the `ready` check to ping the DB / downstreams before returning 200.
+    """
+    ready = bool(settings.jwt_secret)
+    return JSONResponse({"ready": ready}, status_code=200 if ready else 503)
+
+
+@app.get("/me")
+def whoami(principal: Principal = Depends(require_principal)) -> dict[str, object]:
+    """Example protected route — authorized server-side via require_principal."""
+    return {"subject": principal.subject, "scopes": principal.scopes}
