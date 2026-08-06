@@ -117,17 +117,18 @@ destination. See the authoritative policy: **`design/logging-policy.md`**.
 
 Beyond the six dimensions, a profile carries these where applicable.
 
-## Scaffolding (shell / python only)
+## Scaffolding (shell / python / frontend)
 
 *What this section answers:* the stack's **project scaffolding** — the templates a
 new repo is generated from, aligned to the standards above. Scaffolding exists for
-**shell and python only** (CAP-7); it **references the existing `templates/` dir**
-rather than re-inventing it (ADR-0004), and `/sdlc-newproject` generates from it.
+**shell, python, and frontend** (CAP-7); it **references the existing `templates/`
+dir** rather than re-inventing it (ADR-0004), and `/sdlc-newproject` generates from
+it.
 
-- **shell, python:** point at `payload/skills/profile-<stack>/templates/` and note
-  what a generated repo inherits (entry point, `test.sh`, hooks, logging).
-- **sql, frontend:** **`N/A — why`** — these stacks ship no scaffolding in v1
-  (state the reason, keep the section).
+- **shell, python, frontend:** point at `payload/skills/profile-<stack>/templates/`
+  and note what a generated repo inherits (entry point, `test.sh`, hooks, logging).
+- **sql:** **`N/A — why`** — sql ships no scaffolding in v1 (a SQL change lives
+  inside a host app repo); state the reason, keep the section.
 
 ## Cross-profile testing
 
