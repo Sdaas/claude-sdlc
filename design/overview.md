@@ -83,6 +83,13 @@ The orchestrator proposes a tier at CLASSIFY; the human confirms or overrides.
    nowhere else. Those are exactly what the drift guard protects. Self-hosting
    makes such edits routine — the loop is to tweak an installed skill mid-session
    and port it back to the repo afterwards.
+
+   **Writes and removes stay inside `--target`.** `apply.sh` never follows a
+   symlink out of the target: not one planted at an owned path (#77) nor a
+   symlinked **parent directory** (#83). Every write/remove site checks the
+   destination resolves inside `$TARGET` (`within_target`, `pwd -P`-based) and
+   **hard-refuses** an escaping path — `--force` does not override this, since it
+   guards against writing outside the target, not against overwriting your edits.
 2. **Spec-driven with HITL gates.** Following the 2026 industry pattern
    (requirements → design → plan, human approval between each). The spec is the
    contract; code is what ships.

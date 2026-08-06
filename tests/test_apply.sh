@@ -442,6 +442,55 @@ test_uninstall_symlink_leaves_external_target() {
 	rm -rf "$root"
 }
 
+# ============================================================================
+# Test — a symlinked PARENT directory must not let apply.sh write outside
+# --target (#83). #77 guards a symlink AT the final path component; a symlinked
+# parent dir (e.g. $TGT/commands -> /outside) is the sibling hole: [[ -e/-L
+# "$dest" ]] resolves THROUGH the parent, so the path classifies as a fresh ADD
+# and cp writes into the external dir. The installer must refuse a path whose
+# resolved parent escapes --target and write nothing outside.
+# ============================================================================
+test_symlink_parent_write_escape_refused() {
+	local root
+	root="$(mktemp -d)"
+	make_fixture "$root"
+	local outside="$root/outside"
+	mkdir -p "$outside"
+	# attacker plants a symlinked PARENT directory where an owned dir would be
+	ln -s "$outside" "$TGT/commands"
+
+	start "a symlinked parent dir does not let apply.sh write outside --target"
+	run_apply
+	assert_absent "$outside/feature.md" "nothing written outside --target through the symlinked parent"
+	assert_eq 1 "$RC" "apply refuses (non-zero) rather than writing through the parent symlink"
+	assert_contains "$OUT" "escapes --target" "the escaping parent is reported"
+	rm -rf "$root"
+}
+
+# ============================================================================
+# Test — uninstall/removal must not delete an external file THROUGH a symlinked
+# parent dir (#83, removal mirror). rm -f "$dest" resolves through a symlinked
+# parent and would delete the pointed-at file outside --target.
+# ============================================================================
+test_uninstall_symlink_parent_leaves_external_target() {
+	local root
+	root="$(mktemp -d)"
+	make_fixture "$root"
+	run_apply # normal install; commands/feature.md is now owned
+	local outside="$root/outside"
+	mkdir -p "$outside"
+	printf 'EXTERNAL\n' >"$outside/feature.md"
+	# attacker swaps the owned parent dir for a symlink to an external dir
+	rm -rf "$TGT/commands"
+	ln -s "$outside" "$TGT/commands"
+
+	start "uninstall does not delete an external file through a symlinked parent dir"
+	run_apply --uninstall --force
+	assert_exists "$outside/feature.md" "external file survives uninstall (not removed through symlinked parent)"
+	assert_file_is "$outside/feature.md" "EXTERNAL" "external file content untouched"
+	rm -rf "$root"
+}
+
 # --- run all ----------------------------------------------------------------
 echo "Running apply.sh tests against: $APPLY"
 echo
@@ -465,6 +514,8 @@ test_uninstall_preserves_drift
 test_stale_removal_preserves_drift
 test_symlink_write_escape_refused
 test_uninstall_symlink_leaves_external_target
+test_symlink_parent_write_escape_refused
+test_uninstall_symlink_parent_leaves_external_target
 echo
 printf 'Results: %d passed, %d failed\n' "$PASS" "$FAIL"
 [[ "$FAIL" -eq 0 ]]
