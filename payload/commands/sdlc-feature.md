@@ -83,7 +83,12 @@ Not Done until this passes. If VERIFY surfaces a defect, go back to IMPLEMENT.
 ## Gate 6 — CODE REVIEW
 
 Two-pass review of the change (prose: checklist review). Fix findings.
-(Full tier: also a security-review pass.)
+
+**Full tier — security-review pass:** load the `sdlc-security` skill and run its
+pass — invoke the harness `/security-review` on the diff **and** walk the
+`sdlc-security` checklist against the Gate 2 boundary inventory (with the matching
+profile's security section). Produce **specific findings** in the skill's format,
+not "looks fine"; fix HIGH/MED before proceeding.
 
 ## Gate 7 — REVIEW GUIDE
 

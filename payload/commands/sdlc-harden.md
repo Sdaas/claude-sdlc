@@ -112,7 +112,14 @@ sends you back to CLOSE.
 Two-pass review of the change (`sdlc-common`): inline checklist then
 `/code-review`. Confirm every in-harden change was covered by the safety net and
 each behavior delta was intentional and signed off. Fix findings; loop back if a
-defect surfaces. (Full tier: also a **security-review** pass.)
+defect surfaces.
+
+**Full tier — security-review pass:** load the `sdlc-security` skill and run its
+pass — invoke the harness `/security-review` on the diff **and** walk the
+`sdlc-security` checklist against the boundary inventory (with the matching
+profile's security section). Produce **specific findings** in the skill's format,
+not "looks fine"; fix HIGH/MED before proceeding. *(Consuming the profile security
+sections in the harden audit itself is tracked as #87.)*
 
 ## Gate 9 — REVIEW GUIDE → HUMAN REVIEW → COMMIT & PUSH
 
