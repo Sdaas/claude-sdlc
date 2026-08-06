@@ -15,7 +15,7 @@ SHELL_FILES=(
 	apply.sh test.sh release.sh setup.sh install-hooks.sh hooks/pre-push
 	tests/test_apply.sh tests/test_scaffold.sh tests/test_setup.sh tests/test_dogfood.sh
 	tests/test_release.sh tests/test_profile_common.sh tests/test_profile_python.sh
-	tests/test_profile_shell.sh tests/test_profile_sql.sh
+	tests/test_profile_shell.sh tests/test_profile_sql.sh tests/test_profile_frontend.sh
 	payload/skills/sdlc-common/scaffold.sh
 )
 
@@ -102,6 +102,14 @@ if bash tests/test_profile_sql.sh; then
 	echo "    profile-sql tests passed"
 else
 	echo "    profile-sql tests FAILED"
+	FAILED=1
+fi
+
+echo "==> tests/test_profile_frontend.sh"
+if bash tests/test_profile_frontend.sh; then
+	echo "    profile-frontend tests passed"
+else
+	echo "    profile-frontend tests FAILED"
 	FAILED=1
 fi
 

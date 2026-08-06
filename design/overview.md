@@ -279,21 +279,24 @@ non-root Dockerfile) backed by a **`webapp` scaffold** (`scaffold.sh` renders
 service that is born green. The shape is machine-guarded by
 `tests/test_profile_python.sh` (mirroring `tests/test_profile_common.sh`) and the
 `webapp` render is guarded by `tests/test_scaffold.sh`. **`profile-shell`
-(F3/#91) and `profile-sql` (F4/#92) are now filled to the same full skeleton** —
-each with its own comprehensive security section (shell folds in #84; **sql is
-greenfield**, absent from #84–86) and its own machine-guard test
-(`tests/test_profile_shell.sh`, `tests/test_profile_sql.sh`). `profile-sql`
-**ships no scaffolding** (a SQL change lives inside a host app repo and runs
-through *that* repo's `test.sh`). Only **`profile-frontend`** still carries the
-**starter security checklist** (#60), with the rest of its content in `templates/`
-until its F5 build.
+(F3/#91), `profile-sql` (F4/#92), and `profile-frontend` (F5/#93) are now filled
+to the same full skeleton** — each with its own comprehensive security section
+(shell folds in #84; **sql is greenfield**, absent from #84–86; **frontend folds
+in #86** — XSS, secrets-in-bundle, `postMessage`/CSP/tabnabbing, token storage,
+`npm audit`/SRI) and its own machine-guard test (`tests/test_profile_shell.sh`,
+`tests/test_profile_sql.sh`, `tests/test_profile_frontend.sh`). All four profiles
+now clone the F2/python pattern, so the **starter** security hedges (#60) are
+gone. `profile-sql` **ships no scaffolding** (a SQL change lives inside a host app
+repo); shell/python/frontend each point at a real `templates/` dir.
 
 Every profile follows one **[logging policy](logging-policy.md)** (#24): leveled
 logging (INFO default, DEBUG via `--verbose`, ERROR always) to stderr — stdout
 stays data-only — with ISO-8601 UTC timestamps. The scaffolded profiles
-(shell/python) demonstrate it in their entry-point templates so every generated
-project is born compliant; `profile-sql` renders the same policy onto the
-database server's slow-query logging (`log_min_duration_statement`, `auto_explain`).
+(shell/python/frontend) demonstrate it in their entry-point templates so every
+generated project is born compliant; `profile-sql` renders the same policy onto
+the database server's slow-query logging (`log_min_duration_statement`,
+`auto_explain`), and `profile-frontend` maps it onto the browser `console` +
+source-mapped error reporting.
 
 ## Out of scope (for now)
 
