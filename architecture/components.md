@@ -9,7 +9,7 @@
 ## Components (from architecture/overview.md)
 
 - **`profile-common`** — backbone: the `SKILL.md` skeleton + cross-profile testing (CAP-10, CAP-8).
-- **`profile-{shell,python,sql,frontend}`** — per-stack renderings of the 5 dimensions.
+- **`profile-{shell,python,sql,frontend}`** — per-stack renderings of the 6 dimensions.
 - **Command integration** — profiles applied at gates by the SDLC commands (CAP-9).
 - **`templates/`** — existing scaffolding, referenced (ADR-0004).
 
@@ -20,10 +20,10 @@ build order is encoded by `Depends on` (see rationale — priority ≠ order).
 
 | # | Feature | Serves (UC) | Component | Priority | Depends on |
 |---|---|---|---|---|---|
-| **F1** | Build **`profile-common`**: the fixed 5-dimension `SKILL.md` skeleton (ADR-0001) + the cross-profile testing section shell (ADR-0002) + pointers to `sdlc-security` & `logging-policy.md` | UC-008, UC-007 | profile-common | **P0** | — |
-| **F2** | Build **`profile-python`** as the **pilot** (CAP-11) — all 5 dimensions to the skeleton; perf per ADR-0003; scaffolding references `templates/` per ADR-0004; Security dimension = **#85** | UC-001,002,004,005,009,010 | profile-python | **P0** | F1 |
+| **F1** | Build **`profile-common`**: the fixed 6-dimension `SKILL.md` skeleton (ADR-0001, amended #89) + the cross-profile testing section shell (ADR-0002) + pointers to `sdlc-security` & `logging-policy.md` | UC-008, UC-007 | profile-common | **P0** | — |
+| **F2** | Build **`profile-python`** as the **pilot** (CAP-11) — all 6 dimensions to the skeleton; perf per ADR-0003; scaffolding references `templates/` per ADR-0004; Security dimension = **#85** | UC-001,002,004,005,009,010 | profile-python | **P0** | F1 |
 | **F3** | Build **`profile-shell`** to the proven pattern; scaffolding (ADR-0004); Security = **#84** | UC-001,002,004,005,009,010 | profile-shell | **P0** | F2 |
-| **F4** | Build **`profile-sql`** (greenfield — new dir; flips its "out of scope" status); all 5 dimensions; perf per ADR-0003; **new Security section** (no existing issue — sql wasn't in #84–86) | UC-001,002,004,009,010 | profile-sql | **P0** | F2 |
+| **F4** | Build **`profile-sql`** (greenfield — new dir; flips its "out of scope" status); all 6 dimensions; perf per ADR-0003; **new Security section** (no existing issue — sql wasn't in #84–86) | UC-001,002,004,009,010 | profile-sql | **P0** | F2 |
 | **F5** | Build **`profile-frontend`** to the pattern; Security = **#86** | UC-001,002,004,009,010 | profile-frontend | **P0** | F2 |
 | **F6** | Flesh out **cross-profile contract/integration/e2e testing** in `profile-common` (ADR-0002 full: opt-in lane, boundary contract tests, resilience failure-path tests) | UC-007, UC-010 | profile-common | **P0** | F2 + any 2nd profile |
 | **F7** | **Command integration** — wire `/sdlc-feature`, `/sdlc-newproject`, `/sdlc-harden`, `sdlc-common` to load & apply the matching profile at gates (CAP-9) | UC-001–006, 009, 010 | Command integration | **P1** | F1, F2 |
@@ -40,7 +40,7 @@ never in that set. `/sdlc-harden` consuming these is the already-filed **#87**.
 - **F2 is the pilot, and it's python on purpose.** Python is the most
   tooling-complete stack here — `ruff`, `bandit`/`ruff -S`, `pytest`, `pip-audit`
   are **already installed** — so it's the cheapest place to prove the
-  5-dimension pattern (CAP-11) before cloning it four ways. Prove once, then
+  6-dimension pattern (CAP-11) before cloning it four ways. Prove once, then
   replicate.
 - **F3–F5 clone the proven pattern** and can run in parallel once F2 sets it.
   **SQL (F4) is a full v1 peer** but sequenced after the pilot (it's greenfield —

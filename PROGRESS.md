@@ -12,8 +12,9 @@ holds the roadmap + dependency order; `design/` holds the architecture.
 - **Profile-skills initiative — discovery + architecture DONE (branch `discovery/profile-skills`).**
   First real end-to-end `/sdlc-discovery` → `/sdlc-architecture` run (dogfood).
   Elevates the four stack profiles (shell/python/sql/frontend) from template
-  bundles into first-class skills owning **5 dimensions** (best-practices,
-  perf & scale, testing pyramid, security, reliability & resilience). Artifacts:
+  bundles into first-class skills owning **6 dimensions** (best-practices,
+  perf & scale, testing pyramid, security, reliability & resilience, observability
+  & logging — see ADR-0001 amendment #89). Artifacts:
   `discovery/{concept,use-cases}.md`, `architecture/{overview,components}.md` +
   ADRs 0001–0004. **Backlog filed: F1 #89 (profile-common skeleton, blocks all) →
   F2 #90 (python pilot) → F3 #91 shell / F4 #92 sql (greenfield) / F5 #93 frontend

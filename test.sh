@@ -14,7 +14,7 @@ FAILED=0
 SHELL_FILES=(
 	apply.sh test.sh release.sh setup.sh install-hooks.sh hooks/pre-push
 	tests/test_apply.sh tests/test_scaffold.sh tests/test_setup.sh tests/test_dogfood.sh
-	tests/test_release.sh
+	tests/test_release.sh tests/test_profile_common.sh
 	payload/skills/sdlc-common/scaffold.sh
 )
 
@@ -69,6 +69,14 @@ if bash tests/test_release.sh; then
 	echo "    release tests passed"
 else
 	echo "    release tests FAILED"
+	FAILED=1
+fi
+
+echo "==> tests/test_profile_common.sh"
+if bash tests/test_profile_common.sh; then
+	echo "    profile-common tests passed"
+else
+	echo "    profile-common tests FAILED"
 	FAILED=1
 fi
 
